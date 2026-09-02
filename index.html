@@ -1231,13 +1231,11 @@
                 <input type="hidden" id="impIndex" value="-1">
                 <div class="form-grid">
                     <div class="field-group"><label>SERIAL</label><input type="text" id="impSerial" placeholder="SN-IMP-001"></div>
-                    <div class="field-group"><label>USUARIO / ID</label><input type="text" id="impUsuario" placeholder="HP LaserJet Pro"></div>
                     <div class="field-group"><label>MARCA</label><input type="text" id="impMarca" placeholder="HP, Epson..."></div>
                     <div class="field-group">
                         <label>TIPO</label>
                         <select id="impTipo">
                             <option value="Impresora">Impresora</option>
-                            <option value="Escaner">Escaner</option>
                         </select>
                     </div>
                     <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="impDepto" placeholder="Administración"></div>
@@ -2107,7 +2105,7 @@
 
             const data = {
                 serial: document.getElementById('impSerial').value.trim() || '-',
-                usuario: document.getElementById('impUsuario').value.trim() || 'Impresora',
+                usuario: 'Impresora',
                 marca: document.getElementById('impMarca').value.trim() || '-',
                 tipo: document.getElementById('impTipo').value,
                 depto: document.getElementById('impDepto').value.trim() || '-',
@@ -2210,9 +2208,8 @@
             if (item.tipo === 'Impresora') {
                 document.getElementById('impIndex').value = item.id ?? index;
                 document.getElementById('impSerial').value = item.serial !== '-' ? item.serial : '';
-                document.getElementById('impUsuario').value = item.usuario !== '-' ? item.usuario : '';
                 document.getElementById('impMarca').value = item.marca !== '-' ? item.marca : '';
-                document.getElementById('impTipo').value = item.tipo === 'Impresora' ? 'Impresora' : 'Escaner';
+                document.getElementById('impTipo').value = 'Impresora';
                 document.getElementById('impDepto').value = item.depto !== '-' ? item.depto : '';
                 document.getElementById('impIp').value = item.ip !== '-' ? item.ip : '';
                 document.getElementById('impPuerto').value = item.puerto !== '-' ? item.puerto : '';
