@@ -1370,14 +1370,12 @@
                     <div class="field-group"><label>APELLIDO</label><input type="text" id="editApellido"></div>
                     <div class="field-group"><label>USUARIO / CORREO</label><input type="text" id="editUsuario"></div>
                     <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="editDepto"></div>
-                    <div class="field-group" style="display:flex; align-items:flex-end;">
-                        <label style="display:flex; align-items:center; gap:8px; font-weight:600; min-height:42px;">
-                            <input type="checkbox" id="editPrivilegio" style="width:16px; height:16px;">
-                            [ ] Dar privilegio
-                        </label>
-                    </div>
                 </div>
                 <div class="actions-row">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600; margin-right:auto;">
+                        <input type="checkbox" id="editPrivilegio" style="width:16px; height:16px;">
+                        Dar privilegio
+                    </label>
                     <button type="button" class="btn-secondary" onclick="closeModalEditUser()">Cancelar</button>
                     <button type="button" class="btn-secondary" onclick="abrirResetPasswordDesdeEdicion()">🔑 Cambiar contraseña</button>
                     <button type="submit" class="btn-primary">Guardar Cambios</button>
