@@ -2166,6 +2166,14 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
+            registros.sort((a, b) => {
+                const da = String(a.depto).trim().toUpperCase();
+                const db = String(b.depto).trim().toUpperCase();
+                if (da < db) return -1;
+                if (da > db) return 1;
+                return (a.id || 0) - (b.id || 0);
+            });
+
             if (registros.length > 0) {
                 document.getElementById('emptyBox').style.display = 'none';
                 document.getElementById('tableContainer').style.display = 'block';
