@@ -1455,6 +1455,10 @@
             return !!usuario && usuario.usuario === SUPER_ADMIN_USER;
         }
 
+        function esAdmin(usuario) {
+            return !!usuario && (esSuperAdmin(usuario) || String(usuario.rol).toLowerCase() === 'admin');
+        }
+
         let usuarios = [];
         let registros = [];
         let usuarioActual = null;
@@ -1719,8 +1723,8 @@
 
             document.getElementById('cardRegistro').style.display = esAdminRol ? 'block' : 'none';
             document.getElementById('cardImpresora').style.display = esAdminRol ? 'block' : 'none';
-            document.getElementById('btnNewUser').style.display = esAdminPrincipal ? 'block' : 'none';
-            document.getElementById('btnUserList').style.display = esAdminPrincipal ? 'block' : 'none';
+            document.getElementById('btnNewUser').style.display = esAdminRol ? 'block' : 'none';
+            document.getElementById('btnUserList').style.display = esAdminRol ? 'block' : 'none';
             if (document.getElementById('btnOptAdminPass')) {
                 document.getElementById('btnOptAdminPass').style.display = 'none';
             }
@@ -1747,8 +1751,8 @@
         }
 
         function openModalUser() {
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede crear nuevos usuarios.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden crear nuevos usuarios.');
                 return;
             }
             cerrarMenusDesplegables();
@@ -1764,8 +1768,8 @@
 
         async function guardarNuevoUsuario(e) {
             e.preventDefault();
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede crear usuarios.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden crear usuarios.');
                 return;
             }
 
@@ -1816,7 +1820,7 @@
             const container = document.getElementById('userListContainer');
             container.innerHTML = '';
 
-            const esAdminActual = esSuperAdmin(usuarioActual);
+            const esAdminActual = esAdmin(usuarioActual);
             const puedeGestionarPrivilegios = esAdminActual;
 
             usuarios.forEach((u, idx) => {
@@ -1865,8 +1869,8 @@
             const user = usuarios[index];
             if (!user) return;
 
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede eliminar usuarios.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden eliminar usuarios.');
                 return;
             }
 
@@ -1902,8 +1906,8 @@
         }
 
         function abrirResetPasswordDesdeEdicion() {
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden cambiar contraseñas.');
                 return;
             }
             const userId = parseInt(document.getElementById('editUserIndex').value, 10);
@@ -1959,8 +1963,8 @@
         }
 
         function abrirModalResetPass(index) {
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden cambiar contraseñas.');
                 return;
             }
             cerrarMenusDesplegables();
@@ -1977,8 +1981,8 @@
 
         async function ejecutarResetPassword(e) {
             e.preventDefault();
-            if (!esSuperAdmin(usuarioActual)) {
-                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden cambiar contraseñas.');
                 return;
             }
 

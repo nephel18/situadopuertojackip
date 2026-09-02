@@ -36,13 +36,15 @@ SUPER_ADMIN_USERNAME = "bsalazar"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def require_super_admin(requester_username: str | None) -> str:
+def require_super_admin(requester_username: str | None, db: Session) -> str:
     username = (requester_username or "").strip()
-    if username.lower() != SUPER_ADMIN_USERNAME.lower():
-        raise HTTPException(
-            status_code=403,
-            detail="Solo el usuario bsalazar puede administrar usuarios y contraseñas.",
-        )
+    if not username:
+        raise HTTPException(status_code=403, detail="Debe iniciar sesión para administrar usuarios.")
+    if username.lower() == SUPER_ADMIN_USERNAME.lower():
+        return username
+    user = db.query(User).filter(User.username == username).first()
+    if not user or (user.role or "").strip().lower() != "admin":
+        raise HTTPException(status_code=403, detail="No tiene permisos de administrador.")
     return username
 
 
@@ -188,7 +190,7 @@ def list_users(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
 
 @app.post("/api/usuarios", status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserPayload, db: Session = Depends(get_db)) -> Dict[str, Any]:
-    require_super_admin(payload.requester)
+    require_super_admin(payload.requester, db)
 
     username = payload.usuario.strip()
     if db.query(User).filter(User.username == username).first():
@@ -212,7 +214,7 @@ def create_user(payload: UserPayload, db: Session = Depends(get_db)) -> Dict[str
 
 @app.put("/api/usuarios/{user_id}")
 def update_user(user_id: int, payload: UserUpdatePayload, db: Session = Depends(get_db)) -> Dict[str, Any]:
-    require_super_admin(payload.requester)
+    require_super_admin(payload.requester, db)
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -245,7 +247,7 @@ def delete_user(
     requester: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> Dict[str, str]:
-    require_super_admin(requester)
+    require_super_admin(requester, db)
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -272,7 +274,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
 @app.post("/api/usuarios/{user_id}/reset-password")
 def reset_password(user_id: int, payload: Dict[str, str], db: Session = Depends(get_db)) -> Dict[str, str]:
     requester_username = (payload.get("requester") or payload.get("solicitante") or "").strip()
-    require_super_admin(requester_username)
+    require_super_admin(requester_username, db)
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
