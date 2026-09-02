@@ -5,7 +5,39 @@ import tkinter as tk
 from tkinter import filedialog
 from urllib.parse import urlparse, parse_qs, unquote
 
-PACKET_TRACER_EXE = r"C:\Program Files\Cisco Packet Tracer 8.2.1\bin\PacketTracer.exe"
+DEFAULT_PT_CANDIDATES = [
+    r"C:\Program Files\Cisco Packet Tracer 8.2.1\bin\PacketTracer.exe",
+    r"C:\Program Files\Cisco Packet Tracer 8.2.2\bin\PacketTracer.exe",
+    r"C:\Program Files\Cisco Packet Tracer 8.2.0\bin\PacketTracer.exe",
+    r"C:\Program Files\Cisco Packet Tracer 8.3.0\bin\PacketTracer.exe",
+    r"C:\Program Files\Cisco Packet Tracer*\bin\PacketTracer.exe",
+]
+
+def find_packet_tracer():
+    for cand in DEFAULT_PT_CANDIDATES:
+        if '*' in cand:
+            import glob
+            matches = glob.glob(cand)
+            if matches and os.path.exists(matches[0]):
+                return matches[0]
+        elif os.path.exists(cand):
+            return cand
+    try:
+        import winreg
+        for key in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+            try:
+                k = winreg.OpenKey(key, r"SOFTWARE\Cisco Systems\Cisco Packet Tracer")
+                exe, _ = winreg.QueryValueEx(k, "InstallDir")
+                cand = os.path.join(exe, "bin", "PacketTracer.exe")
+                if os.path.exists(cand):
+                    return cand
+            except OSError:
+                pass
+    except Exception:
+        pass
+    return None
+
+PACKET_TRACER_EXE = find_packet_tracer() or r"C:\Program Files\Cisco Packet Tracer 8.2.1\bin\PacketTracer.exe"
 DEFAULT_FOLDER = r"C:\Redes"
 
 
