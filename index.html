@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SITUADO DE PUERTO JACK E IP</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --primary: #0b5ed7;
+            --primary-dark: #0a3d8f;
+            --primary-soft: #eaf3ff;
+            --secondary: #1f2937;
+            --success: #1f9d68;
+            --danger: #d93025;
+            --warning: #f59e0b;
+            --surface: #ffffff;
+            --surface-soft: #f3f7fb;
+            --border: #dfeaf4;
+            --text: #1f2a37;
+            --muted: #62748a;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, #edf5ff 0%, #f7fafc 40%, #eef3f7 100%);
+            color: var(--text);
+            padding-bottom: 40px;
+        }
+
+        /* ENCABEZADO */
+        .header-container {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logo-placeholder {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-placeholder img {
+            max-height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* PANEL SUPERIOR DE USUARIO */
+        .user-panel {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .btn-newUser {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .btn-building-map {
+            background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(15, 118, 110, 0.22);
+        }
+
+        .btn-userList {
+            background-color: #01579b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-session {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-dropdown-toggle {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-dropdown-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .dropdown-menu-session {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 35px;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            z-index: 150;
+            overflow: hidden;
+            border: 1px solid #d0e1f9;
+        }
+
+        .dropdown-menu-session button {
+            color: #333;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .dropdown-menu-session button:hover {
+            background-color: #eef5fc;
+            color: #0288d1;
+        }
+
+        .dropdown-menu-session button.danger-option:hover {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .btn-change-logo {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-change-logo:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            color: #333;
+            border: 1px solid #d0e1f9;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+            width: 380px;
+            z-index: 100;
+            padding: 12px;
+        }
+
+        .user-dropdown h4 {
+            font-size: 13px;
+            color: #0b5ed7;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e8f0ff;
+            padding-bottom: 6px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 10px;
+            border: 1px solid #edf3fb;
+            border-radius: 10px;
+            background: #ffffff;
+            margin-bottom: 8px;
+            font-size: 12px;
+            gap: 8px;
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.02);
+        }
+
+        .user-item.current-user {
+            border-color: #c6e7d8;
+            background: linear-gradient(180deg, #f2fff7 0%, #f8fcfb 100%);
+        }
+
+        .user-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .user-item strong {
+            font-size: 12px;
+            color: #1d2a39;
+        }
+
+        .user-item small {
+            color: #5f7286;
+            font-size: 10px;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #e8f7ee;
+            color: #1c8b5d;
+            border: 1px solid #b9ebce;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn-pass-user {
+            background-color: #f57c00;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 2px;
+        }
+
+        .btn-edit-user {
+            background-color: #0288d1;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 2px;
+        }
+
+        .btn-delete-user {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 2px;
+        }
+
+        /* LOGIN RESPONSIVO */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            background: radial-gradient(circle at top, rgba(141, 180, 255, 0.25), transparent 38%),
+                        linear-gradient(135deg, #edf4ff 0%, #f7f9fc 48%, #eef4fb 100%);
+        }
+
+        .login-card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(245,249,255,0.98) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 28px 24px 26px;
+            border-radius: 22px;
+            box-shadow: 0 24px 55px rgba(15, 23, 42, 0.12), 0 12px 24px rgba(11, 94, 215, 0.08);
+            width: 100%;
+            max-width: 430px;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 9px;
+            background: linear-gradient(90deg, #0b5ed7 0%, #0f172a 50%, #3b82f6 100%);
+        }
+
+        .login-logo-container {
+            margin-top: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(230,239,251,0.75) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 12px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .login-logo-container img {
+            max-height: 94px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 12px 24px rgba(11,94,215,0.15));
+        }
+
+        .login-card h2 {
+            color: #0f172a;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group-login {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            text-align: left;
+        }
+
+        .form-group-login label {
+            font-size: 11px;
+            color: #334155;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-group-login input {
+            padding: 11px 42px 11px 14px;
+            border: 1px solid #dfeaf4;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,251,255,0.96));
+            border-radius: 12px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(15,23,42,0.03);
+        }
+
+        .form-group-login input:focus {
+            border-color: rgba(11, 94, 215, 0.7);
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
+            background: #ffffff;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 16px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 6px;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 12px 22px rgba(11, 94, 215, 0.18);
+            letter-spacing: 0.4px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 26px rgba(11, 94, 215, 0.22);
+            filter: brightness(1.03);
+        }
+
+        /* CONTENEDOR INPUTS CON BOTÓN PASSWORD */
+        .password-field-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .password-field-wrapper input {
+            padding-right: 38px !important;
+        }
+
+        .toggle-password-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #546e7a;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .toggle-password-btn:hover {
+            color: #0288d1;
+        }
+
+        /* CONTENIDO PRINCIPAL ADAPTABLE */
+        .main-content {
+            display: none;
+            max-width: 1250px;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .dashboard-topbar {
+            display: none;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            color: var(--primary);
+            font-size: 11px;
+            letter-spacing: 1.4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .system-status {
+            background: #e7f9f0;
+            color: #137a4d;
+            border: 1px solid #addec8;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            color: #0288d1;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-title::before {
+            content: "•";
+            font-size: 20px;
+        }
+
+        /* GRID ADAPTABLE PARA FORMULARIOS */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .field-group.full-width {
+            grid-column: span 4;
+        }
+
+        .field-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #66788a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .field-group input, .field-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background-color: var(--surface-soft);
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+            width: 100%;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .field-group input:focus, .field-group select:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.10);
+        }
+
+        .actions-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary, .btn-primary, .btn-danger {
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-secondary { background-color: #ffffff; border: 1px solid #c9d8e8; color: var(--secondary); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(11, 94, 215, 0.18); }
+        .btn-danger { background: linear-gradient(135deg, #ea4335 0%, #d93025 100%); color: #ffffff; }
+
+        .btn-secondary:hover, .btn-primary:hover, .btn-danger:hover {
+            transform: translateY(-1px);
+        }
+
+        /* TARJETAS KPI / INDICADORES RESPONSIVOS */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-icon {
+            font-size: 14px;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kpi-blue { background-color: #e3f2fd; color: #0288d1; }
+        .kpi-green { background-color: #e8f5e9; color: #2e7d32; }
+        .kpi-red { background-color: #ffebee; color: #c62828; }
+        .kpi-orange { background-color: #fff3e0; color: #ef6c00; }
+
+        .kpi-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #263238;
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #78909c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* BADGES SI / NO */
+        .badge-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-si {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .badge-no {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+        }
+
+        .list-title {
+            color: var(--secondary);
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .list-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: auto;
+        }
+
+        .search-input {
+            padding: 9px 12px;
+            border: 1px solid #dfeaf4;
+            border-radius: 10px;
+            background-color: #ffffff;
+            font-size: 13px;
+            width: 260px;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
+        }
+
+        .btn-outline {
+            background-color: #f6f9ff;
+            border: 1px solid #dfeaf4;
+            color: var(--primary);
+            padding: 9px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .table-container {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow-x: auto;
+            box-shadow: var(--shadow);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+            min-width: 800px;
+        }
+
+        th {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #ffffff;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-size: 11px;
+            text-transform: uppercase;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #edf3fa;
+            text-align: center;
+            white-space: nowrap;
+            color: var(--text);
+        }
+
+        tr:hover {
+            background-color: #f8fbff;
+        }
+
+        .empty-box {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
+            box-shadow: 0 8px 20px rgba(15,23,42,0.03);
+        }
+
+        .btn-action-edit {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .btn-action-delete {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* MODALES PERSONALIZADOS RESPONSIVOS */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .building-modal-content {
+            max-width: 980px;
+            width: min(980px, 92vw);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #0288d1;
+        }
+
+        .close-modal-btn {
+            border: none;
+            background: #eef5ff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            cursor: pointer;
+            color: #0f172a;
+        }
+
+        .modal-content h3 {
+            color: #0288d1;
+            margin-bottom: 15px;
+        }
+
+        .modal-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .building-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .summary-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: #edf7ff;
+            color: #0b5ed7;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #d8ebff;
+        }
+
+        .building-canvas {
+            position: relative;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+            border: 1px solid #dfeaf4;
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 420px;
+            overflow: hidden;
+        }
+
+        .server-room {
+            position: absolute;
+            left: 24px;
+            top: 20px;
+            width: 180px;
+            padding: 16px 14px;
+            background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 1px solid #93c5fd;
+            border-radius: 14px;
+            box-shadow: 0 10px 20px rgba(59,130,246,0.12);
+            z-index: 2;
+        }
+
+        .server-room h4 {
+            font-size: 13px;
+            color: #0f172a;
+            margin-bottom: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .server-device {
+            display: block;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .server-device:last-child {
+            margin-bottom: 0;
+        }
+
+        .floor-grid {
+            position: relative;
+            margin-left: 230px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: 12px;
+            min-height: 300px;
+            z-index: 1;
+        }
+
+        .dept-box {
+            background: #ffffff;
+            border: 1px solid #dfeaf4;
+            border-top: 4px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px 10px;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .dept-box.administracion { border-top-color: #0ea5a4; }
+        .dept-box.contabilidad { border-top-color: #8b5cf6; }
+        .dept-box.tesoreria { border-top-color: #f59e0b; }
+        .dept-box.telematica { border-top-color: #ef4444; }
+
+        .dept-box h5 {
+            font-size: 12px;
+            color: #0f172a;
+            margin-bottom: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .jack-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .jack-tag {
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 7px;
+            border: 1px solid #dbeafe;
+        }
+
+        .network-lines {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .building-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 6px 9px;
+            font-size: 11px;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .legend-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-swatch.server { background: #3b82f6; }
+        .legend-swatch.jack { background: #10b981; }
+        .legend-swatch.rack { background: #f59e0b; }
+
+        /* BANNER DE NOTIFICACIONES */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #323232;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 300;
+            max-width: 90%;
+        }
+
+        /* MEDIA QUERIES */
+        @media (max-width: 992px) {
+            .form-grid, .form-grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .field-group.full-width {
+                grid-column: span 2;
+            }
+            .kpi-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 8px;
+            }
+            .user-panel {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .form-grid, .form-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .field-group.full-width {
+                grid-column: span 1;
+            }
+
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+
+            .list-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .list-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-input, .btn-outline, .btn-primary {
+                width: 100%;
+            }
+
+            .actions-row {
+                flex-direction: column;
+            }
+            .btn-secondary, .btn-primary, .btn-danger {
+                width: 100%;
+            }
+            .user-dropdown {
+                width: 100%;
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toastNotification" class="toast-notification"></div>
+
+    <header id="mainHeader" class="header-container">
+        <div class="logo-placeholder">
+            <img class="appLogo" src="LOGO2.png" alt="Logo" onerror="this.style.display='none'">
+            <span class="logo-text">SITUADO DE PUERTO JACK E IP</span>
+        </div>
+
+        <div class="header-right">
+            <div id="userPanel" class="user-panel">
+                <span id="userDisplay">Bienvenido</span>
+                <button id="btnNewUser" class="btn-newUser" onclick="openModalUser()">+ NUEVO USUARIO</button>
+                <button id="btnUserList" class="btn-userList" onclick="toggleUserList()">📋 Usuarios</button>
+                <button id="btnOpenPacketTracer" class="btn-building-map" onclick="openPacketTracerProject()">📡 Abrir Packet Tracer</button>
+                
+                <div class="dropdown-session">
+                    <button class="btn-dropdown-toggle" onclick="toggleSessionMenu(event)">⚙️ ▼</button>
+                    <div id="sessionMenu" class="dropdown-menu-session">
+                        <button id="btnOptChangeUser" onclick="openModalChangeUser()">Cambiar usuario</button>
+                        <button class="danger-option" onclick="handleLogout()">Cerrar sesión</button>
+                    </div>
+                </div>
+
+                <div id="userDropdown" class="user-dropdown">
+                    <h4>Usuarios Registrados</h4>
+                    <div id="userListContainer"></div>
+                </div>
+            </div>
+
+            <button id="btnChangeLogo" class="btn-change-logo" title="Cambiar Logo" onclick="document.getElementById('logoInput').click()">📷</button>
+            <input type="file" id="logoInput" accept="image/*" style="display: none;" onchange="cambiarLogo(event)">
+        </div>
+    </header>
+
+    <div id="loginWrapper" class="login-wrapper">
+        <div class="login-card">
+            <div class="login-logo-container">
+                <img class="appLogo" src="LOGO2.png" alt="Logo Inviobras" onerror="this.style.display='none'">
+            </div>
+            <h2>INVIOBRAS BOLIVAR</h2>
+            <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group-login">
+                    <label for="username">Correo o Usuario</label>
+                    <input type="text" id="username" placeholder="ejemplo@correo.com">
+                </div>
+                <div class="form-group-login">
+                    <label for="password">Contraseña</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="password" placeholder="Tu contraseña">
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Mostrar u ocultar contraseña">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <main id="systemContent" class="main-content">
+        <div class="card" id="cardRegistro">
+            <div class="card-title" id="titleRegistro">Nuevo registro</div>
+            <form id="formRegistro" onsubmit="guardarRegistro(event)">
+                <input type="hidden" id="regIndex" value="-1">
+                <div class="form-grid">
+                    <div class="field-group"><label>SERIAL</label><input type="text" id="regSerial" placeholder="SN-00123"></div>
+                    <div class="field-group"><label>USUARIO / ID</label><input type="text" id="regUsuario" placeholder="jperez / 00456"></div>
+                    <div class="field-group"><label>MARCA</label><input type="text" id="regMarca" placeholder="Dell, HP..."></div>
+                    <div class="field-group">
+                        <label>TIPO</label>
+                        <select id="regTipo">
+                            <option value="PC">PC</option>
+                            <option value="LAPTOP">LAPTOP</option>
+                        </select>
+                    </div>
+                    <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="regDepto" placeholder="Contabilidad"></div>
+                    <div class="field-group"><label>IP</label><input type="text" id="regIp" placeholder="192.168.1.10"></div>
+                    <div class="field-group">
+                        <label>OPERATIVO</label>
+                        <select id="regOperativo">
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="field-group"><label>PUERTO JACK ETHERNET</label><input type="text" id="regPuerto" placeholder="SW1-P24"></div>
+                    <div class="field-group full-width"><label>NOTA</label><input type="text" id="regNota" placeholder="Observaciones..."></div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="resetFormRegistro()">Limpiar campos</button>
+                    <button type="submit" id="btnSubmitRegistro" class="btn-primary">+ Agregar registro</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" id="cardImpresora">
+            <div class="card-title" id="titleImpresora">Impresora</div>
+            <form id="formImpresora" onsubmit="guardarImpresora(event)">
+                <input type="hidden" id="impIndex" value="-1">
+                <div class="form-grid form-grid-3">
+                    <div class="field-group"><label>NOMBRE / MODELO</label><input type="text" id="impModelo" placeholder="HP LaserJet Pro"></div>
+                    <div class="field-group"><label>MARCA</label><input type="text" id="impMarca" placeholder="HP, Epson..."></div>
+                    <div class="field-group"><label>SERIAL</label><input type="text" id="impSerial" placeholder="SN-IMP-001"></div>
+                    <div class="field-group"><label>IP</label><input type="text" id="impIp" placeholder="192.168.1.20"></div>
+                    <div class="field-group"><label>PUERTO JACK ETHERNET</label><input type="text" id="impPuerto" placeholder="SW1-P10"></div>
+                    <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="impDepto" placeholder="Administración"></div>
+                    <div class="field-group">
+                        <label>OPERATIVA</label>
+                        <select id="impOperativa">
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="field-group full-width"><label>NOTA</label><input type="text" id="impNota" placeholder="Observaciones..."></div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="resetFormImpresora()">Limpiar</button>
+                    <button type="submit" id="btnSubmitImpresora" class="btn-primary">+ Agregar impresora</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-blue">📊</div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="kpiTotal">0</span>
+                    <span class="kpi-label">Total Registros</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-green">✅</div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="kpiOperativos">0</span>
+                    <span class="kpi-label">Operativos</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-red">⚠️</div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="kpiNoOperativos">0</span>
+                    <span class="kpi-label">No Operativos</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon kpi-orange">🏢</div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="kpiDeptos">0</span>
+                    <span class="kpi-label">Departamentos</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="list-header">
+                <span class="list-title">REGISTROS</span>
+                <div class="list-controls">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar por IP, serial, usuario..." onkeyup="filtrarTabla()">
+                    <button class="btn-outline" onclick="document.getElementById('excelInput').click()">Importar .xlsx</button>
+                    <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importarXLSX(event)">
+                    <button class="btn-primary" onclick="descargarXLSX()">⬇ Descargar .xlsx</button>
+                </div>
+            </div>
+            
+            <div id="emptyBox" class="empty-box">
+                <h4>Aún no hay registros</h4>
+                <p>Agrega uno con el panel de arriba, o importa tu archivo .xlsx existente.</p>
+            </div>
+
+            <div id="tableContainer" class="table-container" style="display: none;">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>SERIAL</th>
+                            <th>USUARIO/ID</th>
+                            <th>MARCA</th>
+                            <th>TIPO</th>
+                            <th>DEPARTAMENTO</th>
+                            <th>IP</th>
+                            <th>OPERATIVO</th>
+                            <th>PUERTO JACK ETHERNET</th>
+                            <th>NOTA</th>
+                            <th class="col-acc">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="modalUser" class="modal">
+        <div class="modal-content">
+            <h3>Registrar Nuevo Usuario</h3>
+            <form id="formNuevoUsuario" onsubmit="guardarNuevoUsuario(event)">
+                <div class="modal-grid">
+                    <div class="field-group"><label>NOMBRE</label><input type="text" id="nuNombre"></div>
+                    <div class="field-group"><label>APELLIDO</label><input type="text" id="nuApellido"></div>
+                    <div class="field-group"><label>USUARIO / CORREO</label><input type="text" id="nuUsuario"></div>
+                    <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="nuDepto"></div>
+                    <div class="field-group">
+                        <label>CONTRASEÑA</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="nuPassword">
+                            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('nuPassword', this)" title="Mostrar u ocultar contraseña">👁️</button>
+                        </div>
+                    </div>
+                    <div class="field-group" style="display:flex; align-items:flex-end;">
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600; min-height:42px;">
+                            <input type="checkbox" id="nuPrivilegio" style="width:16px; height:16px;">
+                            [ ] Dar privilegio
+                        </label>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="closeModalUser()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="modalEditUser" class="modal">
+        <div class="modal-content">
+            <h3>Editar Usuario</h3>
+            <form id="formEditUser" onsubmit="guardarEdicionUsuario(event)">
+                <input type="hidden" id="editUserIndex">
+                <div class="modal-grid">
+                    <div class="field-group"><label>NOMBRE</label><input type="text" id="editNombre"></div>
+                    <div class="field-group"><label>APELLIDO</label><input type="text" id="editApellido"></div>
+                    <div class="field-group"><label>USUARIO / CORREO</label><input type="text" id="editUsuario"></div>
+                    <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="editDepto"></div>
+                    <div class="field-group" style="display:flex; align-items:flex-end;">
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600; min-height:42px;">
+                            <input type="checkbox" id="editPrivilegio" style="width:16px; height:16px;">
+                            [ ] Dar privilegio
+                        </label>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="closeModalEditUser()">Cancelar</button>
+                    <button type="button" class="btn-secondary" onclick="abrirResetPasswordDesdeEdicion()">🔑 Cambiar contraseña</button>
+                    <button type="submit" class="btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalChangeUser" class="modal">
+        <div class="modal-content">
+            <h3>Cambiar Usuario</h3>
+            <form onsubmit="ejecutarCambioUsuario(event)">
+                <div class="modal-grid">
+                    <div class="field-group">
+                        <label>USUARIO</label>
+                        <input type="text" id="changeUsername" placeholder="Usuario o correo">
+                    </div>
+                    <div class="field-group">
+                        <label>CONTRASEÑA</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="changePassword" placeholder="Contraseña">
+                            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('changePassword', this)" title="Mostrar u ocultar contraseña">👁️</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="closeModalChangeUser()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Acceder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalResetPassword" class="modal">
+        <div class="modal-content">
+            <h3>Cambiar Contraseña</h3>
+            <p id="resetTargetUser" style="font-size: 13px; font-weight: 600; color: #555; margin-bottom: 12px;"></p>
+            <form onsubmit="ejecutarResetPassword(event)">
+                <input type="hidden" id="resetUserIndex">
+                <div class="modal-grid">
+                    <div class="field-group">
+                        <label>NUEVA CONTRASEÑA</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="newResetPass" placeholder="Ingresa la nueva contraseña">
+                            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('newResetPass', this)" title="Mostrar u ocultar contraseña">👁️</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn-secondary" onclick="closeModalResetPass()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalConfirmDelete" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #d32f2f;">Confirmar eliminación</h3>
+            <p style="font-size: 14px; margin-bottom: 20px; color: #555;">¿Está seguro de que desea eliminar este registro?</p>
+            <div class="actions-row">
+                <button type="button" class="btn-secondary" onclick="cerrarModalDelete()">Cancelar</button>
+                <button type="button" class="btn-danger" onclick="confirmarEliminacion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://127.0.0.1:8000'
+            : 'https://situado-backend.onrender.com';
+        const SUPER_ADMIN_USER = 'bsalazar';
+        let ADMIN_EMAIL = SUPER_ADMIN_USER;
+        let ADMIN_PASS = SUPER_ADMIN_USER;
+
+        function esSuperAdmin(usuario) {
+            return !!usuario && usuario.usuario === SUPER_ADMIN_USER;
+        }
+
+        let usuarios = [];
+        let registros = [];
+        let usuarioActual = null;
+        let indexEliminar = null;
+
+        async function apiRequest(path, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {}
+            };
+
+            if (body !== null) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(`${API_BASE}${path}`, options);
+            const contentType = response.headers.get('content-type') || '';
+            const payload = contentType.includes('application/json') ? await response.json() : await response.text();
+
+            if (!response.ok) {
+                const message = payload && typeof payload === 'object'
+                    ? (payload.detail || payload.message || payload.error || 'Error en la solicitud')
+                    : String(payload || 'Error en la solicitud');
+                throw new Error(message);
+            }
+
+            return payload;
+        }
+
+        function openPacketTracerProject() {
+            const customUrl = 'ciscopt://select';
+
+            try {
+                window.location.href = customUrl;
+            } catch (error) {
+                console.error('No se pudo abrir Packet Tracer:', error);
+            }
+
+            setTimeout(() => {
+                const banner = document.getElementById('packetTracerWarning');
+                if (banner) {
+                    banner.style.display = 'block';
+                    return;
+                }
+
+                const warning = document.createElement('div');
+                warning.id = 'packetTracerWarning';
+                warning.style.position = 'fixed';
+                warning.style.right = '20px';
+                warning.style.bottom = '20px';
+                warning.style.background = '#fff4e5';
+                warning.style.border = '1px solid #f59e0b';
+                warning.style.color = '#7c4a00';
+                warning.style.padding = '12px 14px';
+                warning.style.borderRadius = '10px';
+                warning.style.boxShadow = '0 10px 24px rgba(0,0,0,0.12)';
+                warning.style.maxWidth = '320px';
+                warning.style.fontSize = '12px';
+                warning.style.zIndex = '9999';
+                warning.innerHTML = 'Si Packet Tracer no abre, verifica que el protocolo <strong>ciscopt</strong> esté registrado en Windows y que la aplicación esté instalada.';
+                document.body.appendChild(warning);
+            }, 1500);
+        }
+
+        function normalizeUser(user) {
+            if (!user) return null;
+            const normalized = {
+                id: user.id || null,
+                nombre: user.nombre || user.first_name || 'Sin Nombre',
+                apellido: user.apellido || user.last_name || '-',
+                usuario: user.usuario || user.username || user.email || '-',
+                depto: user.depto || user.department || '-',
+                pass: user.pass || '',
+                rol: user.rol || user.role || 'lectura'
+            };
+            return normalized;
+        }
+
+        function normalizeRecord(item) {
+            if (!item) return null;
+            const normalized = {
+                id: item.id || null,
+                serial: item.serial ?? item.serial_number ?? '-',
+                usuario: item.usuario ?? item.owner_identifier ?? item.model_name ?? '-',
+                marca: item.marca ?? item.brand ?? '-',
+                tipo: item.tipo ?? item.device_type ?? 'PC',
+                depto: item.depto ?? (item.department || '-'),
+                ip: item.ip ?? item.ip_address ?? '-',
+                operativo: item.operativo ?? (item.is_operational === true ? 'Sí' : 'No'),
+                puerto: item.puerto ?? item.ethernet_port ?? '-',
+                nota: item.nota ?? item.notes ?? '-'
+            };
+
+            if (normalized.tipo === 'Impresora' || item.model_name) {
+                normalized.tipo = 'Impresora';
+                normalized.usuario = item.model_name || item.usuario || 'Impresora';
+            }
+
+            return normalized;
+        }
+
+        async function cargarUsuarios() {
+            try {
+                const data = await apiRequest('/api/usuarios', 'GET');
+                usuarios = Array.isArray(data) ? data.map(normalizeUser).filter(Boolean) : [];
+                if (usuarios.length === 0) {
+                    usuarios = [{
+                        id: 1,
+                        nombre: 'Administrador',
+                        apellido: 'Sistema',
+                        usuario: ADMIN_EMAIL,
+                        depto: 'Sistemas',
+                        pass: ADMIN_PASS,
+                        rol: 'admin'
+                    }];
+                }
+                const admin = usuarios.find(u => u.usuario === SUPER_ADMIN_USER) || usuarios.find(u => u.usuario === ADMIN_EMAIL || u.rol === 'admin');
+                if (admin) {
+                    ADMIN_EMAIL = admin.usuario;
+                    ADMIN_PASS = admin.pass || ADMIN_PASS;
+                }
+                renderUserList();
+            } catch (error) {
+                console.error('No se pudieron cargar los usuarios del backend:', error);
+                usuarios = [{
+                    id: 1,
+                    nombre: 'Administrador',
+                    apellido: 'Sistema',
+                    usuario: ADMIN_EMAIL,
+                    depto: 'Sistemas',
+                    pass: ADMIN_PASS,
+                    rol: 'admin'
+                }];
+                renderUserList();
+            }
+        }
+
+        async function cargarRegistros() {
+            try {
+                const data = await apiRequest('/api/registros', 'GET');
+                registros = Array.isArray(data) ? data.map(normalizeRecord).filter(Boolean) : [];
+                actualizarTabla();
+            } catch (error) {
+                console.error('No se pudieron cargar los registros del backend:', error);
+                registros = [];
+                actualizarTabla();
+            }
+        }
+
+        async function initApp() {
+            await cargarUsuarios();
+            await cargarRegistros();
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = '🙈';
+            } else {
+                input.type = 'password';
+                btn.innerText = '👁️';
+            }
+        }
+
+        function cerrarMenusDesplegables() {
+            document.getElementById('sessionMenu').style.display = 'none';
+            document.getElementById('userDropdown').style.display = 'none';
+        }
+
+        function showNotification(msj) {
+            const toast = document.getElementById('toastNotification');
+            toast.innerText = msj;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const userIn = document.getElementById('username').value.trim();
+            const passIn = document.getElementById('password').value.trim();
+
+            try {
+                const response = await apiRequest('/api/login', 'POST', { username: userIn, password: passIn });
+                const foundUser = normalizeUser(response.user);
+                if (!foundUser) {
+                    throw new Error('Usuario o contraseña incorrectos.');
+                }
+
+                usuarioActual = foundUser;
+                ADMIN_EMAIL = foundUser.usuario;
+                ADMIN_PASS = passIn;
+
+                document.getElementById('loginWrapper').style.display = 'none';
+                document.getElementById('mainHeader').style.display = 'flex';
+                document.getElementById('userDisplay').innerText = `Hola, ${usuarioActual.nombre}`;
+                document.getElementById('userPanel').style.display = 'flex';
+                document.getElementById('systemContent').style.display = 'flex';
+
+                aplicarPermisos();
+                await cargarRegistros();
+                await cargarUsuarios();
+                actualizarTabla();
+            } catch (error) {
+                showNotification(error.message || 'Usuario o contraseña incorrectos.');
+            }
+        }
+
+        function handleLogout() {
+            usuarioActual = null;
+            document.getElementById('loginWrapper').style.display = 'flex';
+            document.getElementById('mainHeader').style.display = 'none';
+            document.getElementById('userPanel').style.display = 'none';
+            document.getElementById('systemContent').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            cerrarMenusDesplegables();
+            document.getElementById('btnChangeLogo').style.display = 'none';
+        }
+
+        function toggleSessionMenu(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('sessionMenu');
+            const estaAbierto = menu.style.display === 'block';
+            cerrarMenusDesplegables();
+            menu.style.display = estaAbierto ? 'none' : 'block';
+        }
+
+        function openModalChangeUser() {
+            cerrarMenusDesplegables();
+            document.getElementById('changeUsername').value = '';
+            document.getElementById('changePassword').value = '';
+            document.getElementById('modalChangeUser').style.display = 'flex';
+        }
+
+        function closeModalChangeUser() {
+            document.getElementById('modalChangeUser').style.display = 'none';
+        }
+
+        function openModalAdminPass() {
+            cerrarMenusDesplegables();
+            const adminIdx = usuarios.findIndex(u => u.usuario === ADMIN_EMAIL);
+            if (adminIdx !== -1) {
+                abrirModalResetPass(adminIdx);
+            }
+        }
+
+        async function ejecutarCambioUsuario(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('changeUsername').value.trim();
+            const pInput = document.getElementById('changePassword').value.trim();
+
+            try {
+                const response = await apiRequest('/api/login', 'POST', { username: uInput, password: pInput });
+                const found = normalizeUser(response.user);
+                if (!found) {
+                    throw new Error('Usuario o contraseña incorrectos.');
+                }
+
+                usuarioActual = found;
+                document.getElementById('userDisplay').innerText = `Hola, ${usuarioActual.nombre}`;
+                aplicarPermisos();
+                await cargarUsuarios();
+                await cargarRegistros();
+                actualizarTabla();
+                closeModalChangeUser();
+            } catch (error) {
+                showNotification(error.message || 'Usuario o contraseña incorrectos.');
+            }
+        }
+
+        window.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown-session') && !event.target.closest('.user-dropdown') && !event.target.closest('#btnUserList')) {
+                cerrarMenusDesplegables();
+            }
+        });
+
+        initApp();
+
+        function aplicarPermisos() {
+            const esAdminPrincipal = esSuperAdmin(usuarioActual);
+            const esAdminRol = esAdminPrincipal || (usuarioActual && usuarioActual.rol === 'admin');
+
+            document.getElementById('cardRegistro').style.display = esAdminRol ? 'block' : 'none';
+            document.getElementById('cardImpresora').style.display = esAdminRol ? 'block' : 'none';
+            document.getElementById('btnNewUser').style.display = esAdminPrincipal ? 'block' : 'none';
+            document.getElementById('btnUserList').style.display = esAdminPrincipal ? 'block' : 'none';
+            if (document.getElementById('btnOptAdminPass')) {
+                document.getElementById('btnOptAdminPass').style.display = 'none';
+            }
+
+            document.getElementById('btnChangeLogo').style.display = esAdminRol ? 'flex' : 'none';
+
+            const accCols = document.querySelectorAll('.col-acc');
+            accCols.forEach(col => col.style.display = esAdminRol ? '' : 'none');
+        }
+
+        function cambiarLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logos = document.querySelectorAll('.appLogo');
+                    logos.forEach(img => {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openModalUser() {
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede crear nuevos usuarios.');
+                return;
+            }
+            cerrarMenusDesplegables();
+            document.getElementById('modalUser').style.display = 'flex';
+        }
+
+
+        function closeModalUser() {
+            document.getElementById('modalUser').style.display = 'none';
+            document.getElementById('formNuevoUsuario').reset();
+            document.getElementById('nuPrivilegio').checked = false;
+        }
+
+        async function guardarNuevoUsuario(e) {
+            e.preventDefault();
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede crear usuarios.');
+                return;
+            }
+
+            const adminActual = usuarioActual ? { ...usuarioActual } : null;
+            const tienePrivilegio = document.getElementById('nuPrivilegio').checked;
+            const nuevo = {
+                nombre: document.getElementById('nuNombre').value.trim() || 'Sin Nombre',
+                apellido: document.getElementById('nuApellido').value.trim() || '-',
+                usuario: document.getElementById('nuUsuario').value.trim() || 'usuario_' + Date.now(),
+                depto: document.getElementById('nuDepto').value.trim() || '-',
+                pass: document.getElementById('nuPassword').value.trim() || '1234',
+                rol: tienePrivilegio ? 'admin' : 'lectura',
+                requester: usuarioActual ? usuarioActual.usuario : null
+            };
+
+            try {
+                const response = await apiRequest('/api/usuarios', 'POST', nuevo);
+                const user = normalizeUser(response);
+                usuarios.push(user);
+                e.target.reset();
+
+                if (adminActual && (esSuperAdmin(adminActual) || adminActual.rol === 'admin')) {
+                    usuarioActual = adminActual;
+                    document.getElementById('userDisplay').innerText = `Hola, ${usuarioActual.nombre}`;
+                    aplicarPermisos();
+                }
+
+                showNotification('Usuario registrado exitosamente.');
+                closeModalUser();
+                renderUserList();
+            } catch (error) {
+                console.error('Error al registrar usuario:', error);
+                showNotification(error.message || 'No fue posible registrar el usuario.');
+            }
+        }
+
+        function toggleUserList() {
+            const dropdown = document.getElementById('userDropdown');
+            const estaAbierto = dropdown.style.display === 'block';
+            cerrarMenusDesplegables();
+            if (!estaAbierto) {
+                renderUserList();
+                dropdown.style.display = 'block';
+            }
+        }
+
+        function renderUserList() {
+            const container = document.getElementById('userListContainer');
+            container.innerHTML = '';
+
+            const esAdminActual = esSuperAdmin(usuarioActual);
+            const puedeGestionarPrivilegios = esAdminActual;
+
+            usuarios.forEach((u, idx) => {
+                const item = document.createElement('div');
+                const isCurrentUser = usuarioActual && u.id === usuarioActual.id;
+                item.className = `user-item${isCurrentUser ? ' current-user' : ''}`;
+
+                const puedeEliminar = esAdminActual && usuarioActual && u.id !== usuarioActual.id;
+                let controlsHtml = '';
+                if (u.usuario === SUPER_ADMIN_USER) {
+                    controlsHtml = `
+                        <button class="btn-edit-user" onclick="abrirModalEditUser(${idx})" title="Editar usuario">✏️ Editar</button>
+                        ${puedeEliminar ? '<button class="btn-delete-user" onclick="eliminarUsuario(' + idx + ')" title="Eliminar usuario">🗑️ Eliminar</button>' : ''}
+                    `;
+                } else if (!puedeGestionarPrivilegios) {
+                    controlsHtml = `
+                        <span style="font-size:12px; color:#475569; font-weight:600;">${u.rol === 'admin' ? 'Administrador' : 'Lectura'}</span>
+                        <button class="btn-edit-user" onclick="abrirModalEditUser(${idx})" title="Editar usuario">✏️ Editar</button>
+                    `;
+                } else {
+                    controlsHtml = `
+                        <select onchange="cambiarRol(${idx}, this.value)">
+                            <option value="lectura" ${u.rol === 'lectura' ? 'selected' : ''}>Lectura</option>
+                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+                        </select>
+                        <button class="btn-edit-user" onclick="abrirModalEditUser(${idx})" title="Editar usuario">✏️ Editar</button>
+                        ${puedeEliminar ? '<button class="btn-delete-user" onclick="eliminarUsuario(' + idx + ')" title="Eliminar usuario">🗑️ Eliminar</button>' : ''}
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="user-item-info">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <strong>${u.nombre} ${u.apellido}</strong>
+                            ${isCurrentUser ? '<span class="user-badge">Activo</span>' : ''}
+                        </div>
+                        <small>${u.usuario}</small>
+                    </div>
+                    <div class="user-controls">${controlsHtml}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        async function eliminarUsuario(index) {
+            const user = usuarios[index];
+            if (!user) return;
+
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede eliminar usuarios.');
+                return;
+            }
+
+            if (usuarioActual.id === user.id) {
+                showNotification('No puedes eliminar tu propio usuario actual.');
+                return;
+            }
+
+            const confirmacion = window.confirm(`¿Seguro que quieres eliminar al usuario "${user.usuario}"?`);
+            if (!confirmacion) return;
+
+            try {
+                const requester = usuarioActual ? usuarioActual.usuario : '';
+                await apiRequest(`/api/usuarios/${user.id}?requester=${encodeURIComponent(requester)}`, 'DELETE');
+                usuarios = usuarios.filter(u => u.id !== user.id);
+                renderUserList();
+                showNotification('Usuario eliminado correctamente.');
+            } catch (error) {
+                showNotification(error.message || 'No se pudo eliminar el usuario.');
+            }
+        }
+
+        function abrirModalEditUser(index) {
+            cerrarMenusDesplegables();
+            const u = usuarios[index];
+            document.getElementById('editUserIndex').value = u.id;
+            document.getElementById('editNombre').value = u.nombre !== 'Sin Nombre' ? u.nombre : '';
+            document.getElementById('editApellido').value = u.apellido !== '-' ? u.apellido : '';
+            document.getElementById('editUsuario').value = u.usuario;
+            document.getElementById('editDepto').value = u.depto !== '-' ? u.depto : '';
+            document.getElementById('editPrivilegio').checked = u.rol === 'admin';
+            document.getElementById('modalEditUser').style.display = 'flex';
+        }
+
+        function abrirResetPasswordDesdeEdicion() {
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+                return;
+            }
+            const userId = parseInt(document.getElementById('editUserIndex').value, 10);
+            const idx = usuarios.findIndex(u => u.id === userId);
+            if (idx >= 0) {
+                abrirModalResetPass(idx);
+                closeModalEditUser();
+            }
+        }
+
+        function closeModalEditUser() {
+            document.getElementById('modalEditUser').style.display = 'none';
+        }
+
+        async function guardarEdicionUsuario(e) {
+            e.preventDefault();
+            const userId = parseInt(document.getElementById('editUserIndex').value, 10);
+            const idx = usuarios.findIndex(u => u.id === userId);
+            if (idx >= 0) {
+                const nuevoUsuarioVal = document.getElementById('editUsuario').value.trim() || usuarios[idx].usuario;
+                const nuevoRol = document.getElementById('editPrivilegio').checked ? 'admin' : 'lectura';
+                const payload = {
+                    nombre: document.getElementById('editNombre').value.trim() || 'Sin Nombre',
+                    apellido: document.getElementById('editApellido').value.trim() || '-',
+                    usuario: nuevoUsuarioVal,
+                    depto: document.getElementById('editDepto').value.trim() || '-',
+                    rol: nuevoRol,
+                    requester: usuarioActual ? usuarioActual.usuario : null
+                };
+
+                try {
+                    const response = await apiRequest(`/api/usuarios/${userId}`, 'PUT', payload);
+                    const user = normalizeUser(response);
+                    usuarios[idx] = user;
+
+                    if (usuarioActual && usuarioActual.id === userId) {
+                        usuarioActual = user;
+                        document.getElementById('userDisplay').innerText = `Hola, ${usuarioActual.nombre}`;
+                    }
+
+                    if (user.usuario === ADMIN_EMAIL || usuarios[idx].usuario === ADMIN_EMAIL) {
+                        ADMIN_EMAIL = user.usuario;
+                    }
+
+                    showNotification('Usuario actualizado exitosamente.');
+                    closeModalEditUser();
+                    renderUserList();
+                    aplicarPermisos();
+                } catch (error) {
+                    showNotification(error.message || 'No se pudo actualizar el usuario.');
+                }
+            }
+        }
+
+        function abrirModalResetPass(index) {
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+                return;
+            }
+            cerrarMenusDesplegables();
+            const u = usuarios[index];
+            document.getElementById('resetUserIndex').value = u.id;
+            document.getElementById('resetTargetUser').innerText = `Usuario: ${u.nombre} ${u.apellido} (${u.usuario})`;
+            document.getElementById('newResetPass').value = '';
+            document.getElementById('modalResetPassword').style.display = 'flex';
+        }
+
+        function closeModalResetPass() {
+            document.getElementById('modalResetPassword').style.display = 'none';
+        }
+
+        async function ejecutarResetPassword(e) {
+            e.preventDefault();
+            if (!esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede cambiar contraseñas.');
+                return;
+            }
+
+            const userId = parseInt(document.getElementById('resetUserIndex').value, 10);
+            const newPass = document.getElementById('newResetPass').value.trim() || '1234';
+
+            try {
+                await apiRequest(`/api/usuarios/${userId}/reset-password`, 'POST', {
+                    password: newPass,
+                    requester: usuarioActual ? usuarioActual.usuario : null
+                });
+                const user = usuarios.find(u => u.id === userId);
+                if (user && user.usuario === ADMIN_EMAIL) {
+                    ADMIN_PASS = newPass;
+                }
+                showNotification(`Contraseña de ${user ? user.usuario : 'usuario'} actualizada.`);
+                closeModalResetPass();
+            } catch (error) {
+                showNotification(error.message || 'No se pudo actualizar la contraseña.');
+            }
+        }
+
+        async function cambiarRol(index, nuevoRol) {
+            const user = usuarios[index];
+            if (!user) return;
+            if (nuevoRol === 'admin' && !esSuperAdmin(usuarioActual)) {
+                showNotification('Solo el usuario bsalazar puede otorgar permisos de administrador.');
+                renderUserList();
+                return;
+            }
+            try {
+                const response = await apiRequest(`/api/usuarios/${user.id}`, 'PUT', {
+                    nombre: user.nombre,
+                    apellido: user.apellido,
+                    usuario: user.usuario,
+                    depto: user.depto,
+                    rol: nuevoRol,
+                    requester: usuarioActual ? usuarioActual.usuario : null
+                });
+                usuarios[index] = normalizeUser(response);
+                showNotification(`Rol de ${usuarios[index].nombre} actualizado a: ${nuevoRol}`);
+                cerrarMenusDesplegables();
+                aplicarPermisos();
+            } catch (error) {
+                showNotification(error.message || 'No se pudo actualizar el rol.');
+            }
+        }
+
+        async function guardarRegistro(e) {
+            e.preventDefault();
+            const recordId = parseInt(document.getElementById('regIndex').value, 10);
+            
+            const data = {
+                serial: document.getElementById('regSerial').value.trim() || '-',
+                usuario: document.getElementById('regUsuario').value.trim() || '-',
+                marca: document.getElementById('regMarca').value.trim() || '-',
+                tipo: document.getElementById('regTipo').value,
+                depto: document.getElementById('regDepto').value.trim() || '-',
+                ip: document.getElementById('regIp').value.trim() || '-',
+                operativo: document.getElementById('regOperativo').value,
+                puerto: document.getElementById('regPuerto').value.trim() || '-',
+                nota: document.getElementById('regNota').value.trim() || '-'
+            };
+
+            try {
+                let response;
+                if (recordId && recordId !== -1) {
+                    response = await apiRequest(`/api/registros/${recordId}`, 'PUT', data);
+                    const idx = registros.findIndex(r => r.id === recordId);
+                    if (idx !== -1) {
+                        registros[idx] = normalizeRecord(response);
+                    }
+                    showNotification('Registro actualizado correctamente.');
+                } else {
+                    response = await apiRequest('/api/registros', 'POST', data);
+                    registros.push(normalizeRecord(response));
+                    showNotification('Registro agregado correctamente.');
+                }
+
+                actualizarTabla();
+                resetFormRegistro();
+            } catch (error) {
+                showNotification(error.message || 'No se pudo guardar el registro.');
+            }
+        }
+
+        function resetFormRegistro() {
+            document.getElementById('formRegistro').reset();
+            document.getElementById('regIndex').value = "-1";
+            document.getElementById('btnSubmitRegistro').innerText = "+ Agregar registro";
+            document.getElementById('titleRegistro').innerText = "Nuevo registro";
+        }
+
+        async function guardarImpresora(e) {
+            e.preventDefault();
+            const recordId = parseInt(document.getElementById('impIndex').value, 10);
+
+            const data = {
+                serial: document.getElementById('impSerial').value.trim() || '-',
+                usuario: document.getElementById('impModelo').value.trim() || 'Impresora',
+                marca: document.getElementById('impMarca').value.trim() || '-',
+                tipo: 'Impresora',
+                depto: document.getElementById('impDepto').value.trim() || '-',
+                ip: document.getElementById('impIp').value.trim() || '-',
+                operativo: document.getElementById('impOperativa').value,
+                puerto: document.getElementById('impPuerto').value.trim() || '-',
+                nota: document.getElementById('impNota').value.trim() || '-'
+            };
+
+            try {
+                let response;
+                if (recordId && recordId !== -1) {
+                    response = await apiRequest(`/api/registros/${recordId}`, 'PUT', data);
+                    const idx = registros.findIndex(r => r.id === recordId);
+                    if (idx !== -1) {
+                        registros[idx] = normalizeRecord(response);
+                    }
+                    showNotification('Impresora actualizada correctamente.');
+                } else {
+                    response = await apiRequest('/api/registros', 'POST', data);
+                    registros.push(normalizeRecord(response));
+                    showNotification('Impresora agregada correctamente.');
+                }
+
+                actualizarTabla();
+                resetFormImpresora();
+            } catch (error) {
+                showNotification(error.message || 'No se pudo guardar la impresora.');
+            }
+        }
+
+        function resetFormImpresora() {
+            document.getElementById('formImpresora').reset();
+            document.getElementById('impIndex').value = "-1";
+            document.getElementById('btnSubmitImpresora').innerText = "+ Agregar impresora";
+            document.getElementById('titleImpresora').innerText = "Impresora";
+        }
+
+        function actualizarKPIs() {
+            const total = registros.length;
+            const operativos = registros.filter(r => String(r.operativo).trim().toLowerCase() === 'sí' || String(r.operativo).trim().toLowerCase() === 'si').length;
+            const noOperativos = registros.filter(r => String(r.operativo).trim().toLowerCase() === 'no').length;
+            
+            const deptosUnicos = new Set(
+                registros
+                    .map(r => String(r.depto).trim().toLowerCase())
+                    .filter(d => d !== '' && d !== '-')
+            ).size;
+
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiOperativos').innerText = operativos;
+            document.getElementById('kpiNoOperativos').innerText = noOperativos;
+            document.getElementById('kpiDeptos').innerText = deptosUnicos;
+        }
+
+        function actualizarTabla() {
+            actualizarKPIs();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (registros.length > 0) {
+                document.getElementById('emptyBox').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+            } else {
+                document.getElementById('emptyBox').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+            }
+
+            const esAdmin = usuarioActual && (usuarioActual.usuario === ADMIN_EMAIL || usuarioActual.rol === 'admin');
+
+            registros.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const esSi = String(item.operativo).trim().toLowerCase() === 'sí' || String(item.operativo).trim().toLowerCase() === 'si';
+                const badgeClass = esSi ? 'badge-si' : 'badge-no';
+
+                tr.innerHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td>${item.serial}</td>
+                    <td>${item.usuario}</td>
+                    <td>${item.marca}</td>
+                    <td>${item.tipo}</td>
+                    <td>${item.depto}</td>
+                    <td>${item.ip}</td>
+                    <td><span class="badge-status ${badgeClass}">${item.operativo}</span></td>
+                    <td>${item.puerto}</td>
+                    <td>${item.nota}</td>
+                    <td class="col-acc" style="display: ${esAdmin ? '' : 'none'};">
+                        <button class="btn-action-edit" onclick="editarRegistro(${index})">Editar</button>
+                        <button class="btn-action-delete" onclick="eliminarRegistro(${index})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editarRegistro(index) {
+            const item = registros[index];
+            if (!item) return;
+
+            if (item.tipo === 'Impresora') {
+                document.getElementById('impIndex').value = item.id ?? index;
+                document.getElementById('impSerial').value = item.serial !== '-' ? item.serial : '';
+                document.getElementById('impModelo').value = item.usuario !== '-' ? item.usuario : '';
+                document.getElementById('impMarca').value = item.marca !== '-' ? item.marca : '';
+                document.getElementById('impDepto').value = item.depto !== '-' ? item.depto : '';
+                document.getElementById('impIp').value = item.ip !== '-' ? item.ip : '';
+                document.getElementById('impPuerto').value = item.puerto !== '-' ? item.puerto : '';
+                document.getElementById('impOperativa').value = item.operativo;
+                document.getElementById('impNota').value = item.nota !== '-' ? item.nota : '';
+
+                document.getElementById('btnSubmitImpresora').innerText = "Guardar cambios";
+                document.getElementById('titleImpresora').innerText = "Editar impresora (N° " + (index + 1) + ")";
+                document.getElementById('cardImpresora').scrollIntoView({ behavior: 'smooth' });
+
+            } else {
+                document.getElementById('regIndex').value = item.id ?? index;
+                document.getElementById('regSerial').value = item.serial !== '-' ? item.serial : '';
+                document.getElementById('regUsuario').value = item.usuario !== '-' ? item.usuario : '';
+                document.getElementById('regMarca').value = item.marca !== '-' ? item.marca : '';
+                document.getElementById('regTipo').value = item.tipo === 'LAPTOP' ? 'LAPTOP' : 'PC';
+                document.getElementById('regDepto').value = item.depto !== '-' ? item.depto : '';
+                document.getElementById('regIp').value = item.ip !== '-' ? item.ip : '';
+                document.getElementById('regPuerto').value = item.puerto !== '-' ? item.puerto : '';
+                document.getElementById('regOperativo').value = item.operativo;
+                document.getElementById('regNota').value = item.nota !== '-' ? item.nota : '';
+
+                document.getElementById('btnSubmitRegistro').innerText = "Guardar cambios";
+                document.getElementById('titleRegistro').innerText = "Editar registro (N° " + (index + 1) + ")";
+                document.getElementById('cardRegistro').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function eliminarRegistro(index) {
+            indexEliminar = index;
+            document.getElementById('modalConfirmDelete').style.display = 'flex';
+        }
+
+        function cerrarModalDelete() {
+            indexEliminar = null;
+            document.getElementById('modalConfirmDelete').style.display = 'none';
+        }
+
+        async function confirmarEliminacion() {
+            if (indexEliminar !== null) {
+                const item = registros[indexEliminar];
+                if (!item || !item.id) {
+                    registros.splice(indexEliminar, 1);
+                    actualizarTabla();
+                    cerrarModalDelete();
+                    showNotification('Registro eliminado.');
+                    return;
+                }
+
+                try {
+                    await apiRequest(`/api/registros/${item.id}`, 'DELETE');
+                    registros.splice(indexEliminar, 1);
+                    actualizarTabla();
+                    cerrarModalDelete();
+                    showNotification('Registro eliminado.');
+                } catch (error) {
+                    showNotification(error.message || 'No se pudo eliminar el registro.');
+                }
+            }
+        }
+
+        function filtrarTabla() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        async function descargarXLSX() {
+            if (registros.length === 0) {
+                showNotification('No hay registros para exportar.');
+                return;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('PUERTO SERIAL');
+
+            worksheet.columns = [
+                { width: 8 },
+                { width: 18 },
+                { width: 22 },
+                { width: 16 },
+                { width: 16 },
+                { width: 25 },
+                { width: 18 },
+                { width: 14 },
+                { width: 24 },
+                { width: 35 }
+            ];
+
+            worksheet.views = [{ state: 'frozen', ySplit: 4 }];
+            worksheet.autoFilter = { from: 'A4', to: `J${4 + registros.length}` };
+
+            const logoBase64 = await new Promise(resolve => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 180;
+                    canvas.height = 60;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(null);
+                img.src = 'LOGO2.png';
+            });
+
+            if (logoBase64) {
+                const logoId = workbook.addImage({ base64: logoBase64.split(',')[1], extension: 'png' });
+                worksheet.addImage(logoId, 'A1:E3');
+            }
+
+            for (let i = 0; i < 3; i++) {
+                worksheet.addRow([]);
+            }
+
+            const headers = ['N°', 'SERIAL', 'USUARIO/ID', 'MARCA', 'TIPO', 'DEPARTAMENTO', 'IP', 'OPERATIVO', 'PUERTO JACK', 'NOTA'];
+            const headerRow = worksheet.addRow(headers);
+            headerRow.height = 26;
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1F6FB2' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: '000000' } },
+                    left: { style: 'thin', color: { argb: '000000' } },
+                    bottom: { style: 'thin', color: { argb: '000000' } },
+                    right: { style: 'thin', color: { argb: '000000' } }
+                };
+                cell.numFmt = '@';
+            });
+
+            registros.forEach((r, index) => {
+                const row = worksheet.addRow([
+                    index + 1,
+                    r.serial || '-',
+                    r.usuario || '-',
+                    r.marca || '-',
+                    r.tipo || 'PC',
+                    r.depto || '-',
+                    r.ip || '-',
+                    r.operativo || 'NO',
+                    r.puerto || '-',
+                    r.nota || '-'
+                ]);
+
+                row.height = 20;
+                row.eachCell((cell, colNumber) => {
+                    cell.font = { name: 'Arial', size: 9, color: { argb: colNumber === 8 && String(r.operativo || '').trim().toLowerCase() === 'no' ? 'D32F2F' : '000000' } };
+                    cell.alignment = { vertical: 'middle', horizontal: colNumber === 1 ? 'center' : 'left' };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'D9E2EC' } },
+                        left: { style: 'thin', color: { argb: 'D9E2EC' } },
+                        bottom: { style: 'thin', color: { argb: 'D9E2EC' } },
+                        right: { style: 'thin', color: { argb: 'D9E2EC' } }
+                    };
+                    if (colNumber === 1) {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index % 2 === 0 ? 'F7FAFC' : 'FFFFFF' } };
+                    }
+                    if (colNumber === 8 && String(r.operativo || '').trim().toLowerCase() === 'no') {
+                        cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'D32F2F' } };
+                    }
+                });
+            });
+
+            worksheet.eachRow({ includeEmpty: true }, row => {
+                row.eachCell({ includeEmpty: true }, cell => {
+                    if (!cell.value) {
+                        cell.value = '';
+                    }
+                });
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, 'Situado de puerto JACK e IP.xlsx');
+
+            showNotification('Archivo exportado con el formato solicitado.');
+        }
+
+        function importarXLSX(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+
+                    if (!rows || rows.length === 0) {
+                        showNotification('El archivo Excel está vacío o no contiene datos válidos.');
+                        return;
+                    }
+
+                    const headerIndex = rows.findIndex(row => {
+                        const normalized = row.map(cell => String(cell || '').trim().toUpperCase());
+                        return normalized.includes('SERIAL') && normalized.includes('USUARIO/ID');
+                    });
+
+                    if (headerIndex === -1) {
+                        showNotification('El archivo no tiene el formato esperado de Puerto Serial.');
+                        return;
+                    }
+
+                    const headers = rows[headerIndex].map(cell => String(cell || '').trim());
+                    const indexMap = {};
+                    headers.forEach((header, index) => {
+                        indexMap[header.toUpperCase()] = index;
+                    });
+
+                    const nuevosRegistros = rows.slice(headerIndex + 1)
+                        .filter(row => row.some(cell => String(cell || '').trim() !== ''))
+                        .map(row => {
+                            const getCell = (keys) => {
+                                for (const key of keys) {
+                                    const idx = indexMap[key.toUpperCase()];
+                                    if (idx !== undefined && row[idx] !== undefined) {
+                                        const value = String(row[idx]).trim();
+                                        return value !== '' ? value : '-';
+                                    }
+                                }
+                                return '-';
+                            };
+
+                            const tipoVal = String(getCell(['TIPO'])).trim().toUpperCase();
+                            return {
+                                serial: getCell(['SERIAL']),
+                                usuario: getCell(['USUARIO/ID', 'USUARIO / ID', 'USUARIO']),
+                                marca: getCell(['MARCA']),
+                                tipo: tipoVal.includes('LAP') ? 'LAPTOP' : (tipoVal !== '-' ? tipoVal : 'PC'),
+                                depto: getCell(['DEPARTAMENTO']),
+                                ip: getCell(['IP', 'DIRECCIÓN IP']),
+                                operativo: getCell(['OPERATIVO']),
+                                puerto: getCell(['PUERTO JACK', 'PUERTO JACK ETHERNET', 'PUERTO']),
+                                nota: getCell(['NOTA', 'OBSERVACIONES / NOTA', 'OBSERVACIONES'])
+                            };
+                        });
+
+                    registros = registros.concat(nuevosRegistros);
+                    actualizarTabla();
+                    showNotification(`Se importaron ${nuevosRegistros.length} registros exitosamente.`);
+                } catch (error) {
+                    console.error(error);
+                    showNotification('Ocurrió un error al procesar el archivo Excel.');
+                }
+                event.target.value = '';
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\ciscopt]
+@="URL:Packet Tracer Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\ciscopt\DefaultIcon]
+@="\"C:\\Program Files\\Cisco Packet Tracer 8.2.1\\bin\\PacketTracer.exe\",1"
+
+[HKEY_CLASSES_ROOT\ciscopt\shell\open\command]
+@="\"D:\\Situado de puerto JACK e IP DEMO\\open_packet_tracer.bat\" \"%1\""
+
+; Si mueves el .bat a otra carpeta, cambia la ruta anterior.
+; Usa rutas con doble barra invertida en el registro de Windows.
