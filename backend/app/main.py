@@ -140,6 +140,13 @@ def seed_default_admin() -> None:
             return
 
         if super_admin:
+            try:
+                if not verify_password(SUPER_ADMIN_USERNAME, super_admin.password_hash):
+                    super_admin.password_hash = hash_password(SUPER_ADMIN_USERNAME)
+                    db.commit()
+            except Exception:
+                super_admin.password_hash = hash_password(SUPER_ADMIN_USERNAME)
+                db.commit()
             return
 
         admin_dept = ensure_department(db, "Sistemas")
