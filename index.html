@@ -2059,15 +2059,15 @@
             const recordId = parseInt(document.getElementById('regIndex').value, 10);
             
             const data = {
-                serial: document.getElementById('regSerial').value.trim() || '-',
+                serial: document.getElementById('regSerial').value.trim().toUpperCase() || '-',
                 usuario: document.getElementById('regUsuario').value.trim() || '-',
-                marca: document.getElementById('regMarca').value.trim() || '-',
-                tipo: document.getElementById('regTipo').value,
-                depto: document.getElementById('regDepto').value.trim() || '-',
-                ip: document.getElementById('regIp').value.trim() || '-',
+                marca: document.getElementById('regMarca').value.trim().toUpperCase() || '-',
+                tipo: document.getElementById('regTipo').value.toUpperCase(),
+                depto: document.getElementById('regDepto').value.trim().toUpperCase() || '-',
+                ip: document.getElementById('regIp').value.trim().toUpperCase() || '-',
                 operativo: document.getElementById('regOperativo').value,
-                puerto: document.getElementById('regPuerto').value.trim() || '-',
-                nota: document.getElementById('regNota').value.trim() || '-'
+                puerto: document.getElementById('regPuerto').value.trim().toUpperCase() || '-',
+                nota: document.getElementById('regNota').value.trim().toUpperCase() || '-'
             };
 
             try {
@@ -2104,15 +2104,15 @@
             const recordId = parseInt(document.getElementById('impIndex').value, 10);
 
             const data = {
-                serial: document.getElementById('impSerial').value.trim() || '-',
+                serial: document.getElementById('impSerial').value.trim().toUpperCase() || '-',
                 usuario: '',
-                marca: document.getElementById('impMarca').value.trim() || '-',
-                tipo: document.getElementById('impTipo').value,
-                depto: document.getElementById('impDepto').value.trim() || '-',
-                ip: document.getElementById('impIp').value.trim() || '-',
+                marca: document.getElementById('impMarca').value.trim().toUpperCase() || '-',
+                tipo: document.getElementById('impTipo').value.toUpperCase(),
+                depto: document.getElementById('impDepto').value.trim().toUpperCase() || '-',
+                ip: document.getElementById('impIp').value.trim().toUpperCase() || '-',
                 operativo: document.getElementById('impOperativa').value,
-                puerto: document.getElementById('impPuerto').value.trim() || '-',
-                nota: document.getElementById('impNota').value.trim() || '-'
+                puerto: document.getElementById('impPuerto').value.trim().toUpperCase() || '-',
+                nota: document.getElementById('impNota').value.trim().toUpperCase() || '-'
             };
 
             try {
