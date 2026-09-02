@@ -141,9 +141,7 @@ def seed_default_admin() -> None:
 
         if super_admin:
             try:
-                if not verify_password(SUPER_ADMIN_USERNAME, super_admin.password_hash):
-                    super_admin.password_hash = hash_password(SUPER_ADMIN_USERNAME)
-                    db.commit()
+                verify_password(SUPER_ADMIN_USERNAME, super_admin.password_hash)
             except Exception:
                 super_admin.password_hash = hash_password(SUPER_ADMIN_USERNAME)
                 db.commit()
