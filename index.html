@@ -1229,13 +1229,19 @@
             <div class="card-title" id="titleImpresora">Impresora</div>
             <form id="formImpresora" onsubmit="guardarImpresora(event)">
                 <input type="hidden" id="impIndex" value="-1">
-                <div class="form-grid form-grid-3">
-                    <div class="field-group"><label>NOMBRE / MODELO</label><input type="text" id="impModelo" placeholder="HP LaserJet Pro"></div>
-                    <div class="field-group"><label>MARCA</label><input type="text" id="impMarca" placeholder="HP, Epson..."></div>
+                <div class="form-grid">
                     <div class="field-group"><label>SERIAL</label><input type="text" id="impSerial" placeholder="SN-IMP-001"></div>
-                    <div class="field-group"><label>IP</label><input type="text" id="impIp" placeholder="192.168.1.20"></div>
-                    <div class="field-group"><label>PUERTO JACK ETHERNET</label><input type="text" id="impPuerto" placeholder="SW1-P10"></div>
+                    <div class="field-group"><label>USUARIO / ID</label><input type="text" id="impUsuario" placeholder="HP LaserJet Pro"></div>
+                    <div class="field-group"><label>MARCA</label><input type="text" id="impMarca" placeholder="HP, Epson..."></div>
+                    <div class="field-group">
+                        <label>TIPO</label>
+                        <select id="impTipo">
+                            <option value="Impresora">Impresora</option>
+                            <option value="Escaner">Escaner</option>
+                        </select>
+                    </div>
                     <div class="field-group"><label>DEPARTAMENTO</label><input type="text" id="impDepto" placeholder="Administración"></div>
+                    <div class="field-group"><label>IP</label><input type="text" id="impIp" placeholder="192.168.1.20"></div>
                     <div class="field-group">
                         <label>OPERATIVA</label>
                         <select id="impOperativa">
@@ -1243,6 +1249,7 @@
                             <option value="No">No</option>
                         </select>
                     </div>
+                    <div class="field-group"><label>PUERTO JACK ETHERNET</label><input type="text" id="impPuerto" placeholder="SW1-P10"></div>
                     <div class="field-group full-width"><label>NOTA</label><input type="text" id="impNota" placeholder="Observaciones..."></div>
                 </div>
                 <div class="actions-row">
@@ -2100,9 +2107,9 @@
 
             const data = {
                 serial: document.getElementById('impSerial').value.trim() || '-',
-                usuario: document.getElementById('impModelo').value.trim() || 'Impresora',
+                usuario: document.getElementById('impUsuario').value.trim() || 'Impresora',
                 marca: document.getElementById('impMarca').value.trim() || '-',
-                tipo: 'Impresora',
+                tipo: document.getElementById('impTipo').value,
                 depto: document.getElementById('impDepto').value.trim() || '-',
                 ip: document.getElementById('impIp').value.trim() || '-',
                 operativo: document.getElementById('impOperativa').value,
@@ -2203,8 +2210,9 @@
             if (item.tipo === 'Impresora') {
                 document.getElementById('impIndex').value = item.id ?? index;
                 document.getElementById('impSerial').value = item.serial !== '-' ? item.serial : '';
-                document.getElementById('impModelo').value = item.usuario !== '-' ? item.usuario : '';
+                document.getElementById('impUsuario').value = item.usuario !== '-' ? item.usuario : '';
                 document.getElementById('impMarca').value = item.marca !== '-' ? item.marca : '';
+                document.getElementById('impTipo').value = item.tipo === 'Impresora' ? 'Impresora' : 'Escaner';
                 document.getElementById('impDepto').value = item.depto !== '-' ? item.depto : '';
                 document.getElementById('impIp').value = item.ip !== '-' ? item.ip : '';
                 document.getElementById('impPuerto').value = item.puerto !== '-' ? item.puerto : '';
