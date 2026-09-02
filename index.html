@@ -2398,7 +2398,7 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -2455,9 +2455,20 @@
                             };
                         });
 
-                    registros = registros.concat(nuevosRegistros);
-                    actualizarTabla();
-                    showNotification(`Se importaron ${nuevosRegistros.length} registros exitosamente.`);
+                    let importados = 0;
+                    let fallidos = 0;
+                    for (const reg of nuevosRegistros) {
+                        try {
+                            await apiRequest('/api/registros', 'POST', reg);
+                            importados++;
+                        } catch (err) {
+                            fallidos++;
+                            console.error('Error al importar registro:', reg, err);
+                        }
+                    }
+
+                    await cargarRegistros();
+                    showNotification(`Se importaron ${importados} registros exitosamente${fallidos ? ` (${fallidos} con error)` : ''}.`);
                 } catch (error) {
                     console.error(error);
                     showNotification('Ocurrió un error al procesar el archivo Excel.');
