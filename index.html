@@ -1495,31 +1495,6 @@
             } catch (error) {
                 console.error('No se pudo abrir Packet Tracer:', error);
             }
-
-            setTimeout(() => {
-                const banner = document.getElementById('packetTracerWarning');
-                if (banner) {
-                    banner.style.display = 'block';
-                    return;
-                }
-
-                const warning = document.createElement('div');
-                warning.id = 'packetTracerWarning';
-                warning.style.position = 'fixed';
-                warning.style.right = '20px';
-                warning.style.bottom = '20px';
-                warning.style.background = '#fff4e5';
-                warning.style.border = '1px solid #f59e0b';
-                warning.style.color = '#7c4a00';
-                warning.style.padding = '12px 14px';
-                warning.style.borderRadius = '10px';
-                warning.style.boxShadow = '0 10px 24px rgba(0,0,0,0.12)';
-                warning.style.maxWidth = '320px';
-                warning.style.fontSize = '12px';
-                warning.style.zIndex = '9999';
-                warning.innerHTML = 'Si Packet Tracer no abre, verifica que el protocolo <strong>ciscopt</strong> esté registrado en Windows y que la aplicación esté instalada.';
-                document.body.appendChild(warning);
-            }, 1500);
         }
 
         function normalizeUser(user) {
