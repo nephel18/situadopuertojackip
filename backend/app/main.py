@@ -103,7 +103,7 @@ def printer_to_dict(record: PrinterRecord) -> Dict[str, Any]:
     return {
         "id": record.id,
         "serial": record.serial_number or "-",
-        "usuario": record.model_name or "Impresora",
+        "usuario": record.model_name or "",
         "marca": record.brand or "-",
         "tipo": "Impresora",
         "depto": record.department.name if record.department else "-",
@@ -302,7 +302,7 @@ def update_record(record_id: int, payload: GenericRecordPayload, db: Session = D
             raise HTTPException(status_code=404, detail="Registro de impresora no encontrado.")
 
         dept = ensure_department(db, payload.depto)
-        record.model_name = payload.usuario.strip() or "Impresora"
+        record.model_name = payload.usuario.strip()
         record.brand = payload.marca.strip() or "-"
         record.serial_number = payload.serial.strip() or "-"
         record.department_id = dept.id if dept else None
@@ -372,7 +372,7 @@ def create_computer_record(payload: GenericRecordPayload, db: Session = Depends(
 def create_printer_record(payload: GenericRecordPayload, db: Session = Depends(get_db)) -> Dict[str, Any]:
     dept = ensure_department(db, payload.depto)
     record = PrinterRecord(
-        model_name=(payload.usuario or "Impresora").strip() or "Impresora",
+        model_name=(payload.usuario or "").strip(),
         brand=(payload.marca or "-").strip() or "-",
         serial_number=(payload.serial or "-").strip() or "-",
         department_id=dept.id if dept else None,

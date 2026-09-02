@@ -1553,7 +1553,7 @@
 
             if (normalized.tipo === 'Impresora' || item.model_name) {
                 normalized.tipo = 'Impresora';
-                normalized.usuario = item.model_name || item.usuario || 'Impresora';
+                normalized.usuario = '';
             }
 
             return normalized;
@@ -2105,7 +2105,7 @@
 
             const data = {
                 serial: document.getElementById('impSerial').value.trim() || '-',
-                usuario: 'Impresora',
+                usuario: '',
                 marca: document.getElementById('impMarca').value.trim() || '-',
                 tipo: document.getElementById('impTipo').value,
                 depto: document.getElementById('impDepto').value.trim() || '-',
