@@ -1049,6 +1049,37 @@
         .legend-swatch.jack { background: #10b981; }
         .legend-swatch.rack { background: #f59e0b; }
 
+        /* ===== Editor de Plano del Edificio ===== */
+        .floor-plan-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+        .fp-name-input { flex:1 1 180px; padding:8px 10px; border:1px solid #dbe4ef; border-radius:8px; font-size:13px; }
+        .fp-dim { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#334155; }
+        .fp-dim select { padding:7px; border:1px solid #dbe4ef; border-radius:8px; }
+        .fp-room-name { width:130px; padding:8px 10px; border:1px solid #dbe4ef; border-radius:8px; font-size:13px; border-left:4px solid #3b82f6; }
+        .floor-plan-toolbar input[type=color] { width:34px; height:34px; padding:0; border:1px solid #dbe4ef; border-radius:8px; background:none; cursor:pointer; }
+        .fp-btn { padding:8px 14px; }
+        .floor-plan-body { display:flex; gap:16px; }
+        .floor-plan-canvas-wrap { flex:1; min-width:0; }
+        .fp-canvas { display:grid; gap:2px; background:#f1f5f9; border:1px solid #dbe4ef; border-radius:10px; padding:8px; min-height:380px; user-select:none; }
+        .fp-cell { background:#fff; border:1px solid #e2e8f0; border-radius:5px; min-height:36px; position:relative; transition:background .1s; cursor:pointer; }
+        .fp-cell.drawing:hover { background:#dbeafe; outline:2px dashed #3b82f6; }
+        .fp-cell.has-room { border-width:2px; }
+        .fp-cell.room-label::after { content:attr(data-room); position:absolute; top:1px; left:4px; font-size:9px; font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.4); pointer-events:none; }
+        .fp-comp { background:#fff; border:1px solid #dbe4ef; border-radius:8px; padding:7px 9px; cursor:grab; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; }
+        .fp-comp:active { cursor:grabbing; }
+        .fp-comp .fp-ip { color:#0288d1; font-weight:700; }
+        .fp-comp .fp-serial { color:#64748b; font-size:11px; }
+        .fp-comp-in-canvas { position:absolute; inset:2px; background:#eff6ff; border:1px solid #3b82f6; border-radius:4px; font-size:10px; font-weight:700; color:#1e40af; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2px; pointer-events:none; overflow:hidden; z-index:3; }
+        .fp-comp-in-canvas .fi-ip { font-size:11px; }
+        .fp-comp-in-canvas .fi-name { font-size:8px; color:#1e3a8a; opacity:.85; }
+        .floor-plan-side { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto; }
+        .floor-plan-side h4 { margin:0 0 6px; font-size:13px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:6px; }
+        .fp-room-list { display:flex; flex-wrap:wrap; gap:6px; }
+        .fp-room-chip { font-size:11px; font-weight:700; padding:4px 8px; border-radius:999px; color:#fff; }
+        .fp-comps { display:flex; flex-direction:column; gap:6px; }
+        .fp-hint { font-size:12px; color:#64748b; font-style:italic; padding:4px 0; }
+        #fpDrawBtn.fp-draw-active { background:#3b82f6 !important; color:#fff !important; }
+        @media (max-width:900px){ .floor-plan-body{ flex-direction:column; } .floor-plan-side{ width:100%; max-height:none; } }
+
         /* BANNER DE NOTIFICACIONES */
         .toast-notification {
             position: fixed;
@@ -1146,7 +1177,7 @@
                 <span id="userDisplay">Bienvenido</span>
                 <button id="btnNewUser" class="btn-newUser" onclick="openModalUser()">+ NUEVO USUARIO</button>
                 <button id="btnUserList" class="btn-userList" onclick="toggleUserList()">📋 Usuarios</button>
-                <button id="btnOpenPacketTracer" class="btn-building-map" onclick="openPacketTracerProject()">📡 Abrir Packet Tracer</button>
+                <button id="btnOpenPacketTracer" class="btn-building-map" onclick="openFloorPlanEditor()">🏢 Plano del Edificio</button>
                 
                 <div class="dropdown-session">
                     <button class="btn-dropdown-toggle" onclick="toggleSessionMenu(event)">⚙️ ▼</button>
@@ -1443,6 +1474,46 @@
         </div>
     </div>
 
+    <div id="modalFloorPlan" class="modal">
+        <div class="modal-content building-modal-content" style="max-width:1180px;">
+            <div class="modal-header">
+                <h3>🏢 Plano del Edificio</h3>
+                <button type="button" class="close-modal-btn" onclick="cerrarModalFloorPlan()">✕</button>
+            </div>
+
+            <div class="floor-plan-toolbar">
+                <input type="text" id="fpName" class="fp-name-input" value="Plano del edificio" placeholder="Nombre del plano">
+                <label class="fp-dim">Ancho
+                    <select id="fpWidth"></select>
+                </label>
+                <label class="fp-dim">Alto
+                    <select id="fpHeight"></select>
+                </label>
+                <button type="button" id="fpDrawBtn" class="btn-secondary" onclick="toggleDibujarHabitacion()">✏️ Dibujar habitación</button>
+                <input type="text" id="fpRoomName" class="fp-room-name" value="Oficina" placeholder="Nombre habitación">
+                <input type="color" id="fpColor" value="#3b82f6" title="Color habitación">
+                <button type="button" class="btn-danger fp-btn" onclick="limpiarPlano()">🧹 Limpiar</button>
+                <button type="button" class="btn-primary fp-btn" onclick="guardarPlano()">💾 Guardar</button>
+            </div>
+
+            <div class="floor-plan-body">
+                <div class="floor-plan-canvas-wrap">
+                    <div id="fpCanvas" class="fp-canvas"></div>
+                </div>
+                <div class="floor-plan-side">
+                    <h4>Habitaciones del plano</h4>
+                    <div id="fpRoomList" class="fp-room-list">
+                        <div class="fp-hint">Dibuja habitaciones sobre la cuadrícula.</div>
+                    </div>
+                    <h4>Computadoras registradas</h4>
+                    <div id="fpComps" class="fp-comps">
+                        <div class="fp-hint">Arrastra una computadora a una celda del plano.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://127.0.0.1:8000'
@@ -1489,13 +1560,219 @@
             return payload;
         }
 
-        function openPacketTracerProject() {
-            const customUrl = 'ciscopt://select';
+        // ===== Editor de Plano del Edificio =====
+        let fpEstado = {
+            width: 8, height: 6, name: 'Plano del edificio',
+            dibujando: false,
+            habitacionActual: { nombre: 'Oficina', color: '#3b82f6' },
+            rooms: [], computadoras: []
+        };
+        let fpPlanoId = null;
+        let fpCompsList = [];
+        let fpDragCompId = null;
 
+        function cellKey(r, c) { return r + ',' + c; }
+
+        function openFloorPlanEditor() {
+            if (!esAdmin(usuarioActual)) {
+                showNotification('Solo los administradores pueden editar el plano del edificio.');
+                return;
+            }
+            const wSel = document.getElementById('fpWidth');
+            const hSel = document.getElementById('fpHeight');
+            wSel.innerHTML = ''; hSel.innerHTML = '';
+            for (let i = 5; i <= 12; i++) { wSel.add(new Option(i, i)); hSel.add(new Option(i, i)); }
+            wSel.value = fpEstado.width; hSel.value = fpEstado.height;
+            wSel.onchange = () => { fpEstado.width = parseInt(wSel.value, 10); renderCuadricula(); };
+            hSel.onchange = () => { fpEstado.height = parseInt(hSel.value, 10); renderCuadricula(); };
+            document.getElementById('fpRoomName').value = fpEstado.habitacionActual.nombre;
+            document.getElementById('fpColor').value = fpEstado.habitacionActual.color;
+            document.getElementById('fpName').value = fpEstado.name;
+            document.getElementById('fpDrawBtn').classList.remove('fp-draw-active');
+            fpEstado.dibujando = false;
+            cargarComputadorasPlano();
+            cargarPlanoExistente().then(() => renderCuadricula());
+            cerrarMenusDesplegables();
+            document.getElementById('modalFloorPlan').style.display = 'flex';
+        }
+
+        function cerrarModalFloorPlan() {
+            document.getElementById('modalFloorPlan').style.display = 'none';
+        }
+
+        function renderCuadricula() {
+            const canvas = document.getElementById('fpCanvas');
+            canvas.style.gridTemplateColumns = `repeat(${fpEstado.width}, minmax(40px, 1fr))`;
+            canvas.innerHTML = '';
+            const roomByCell = {};
+            fpEstado.rooms.forEach(room => room.cells.forEach(k => roomByCell[k] = room));
+            const compByCell = {};
+            fpEstado.computadoras.forEach(co => { if (co.cell) compByCell[co.cell] = co; });
+
+            for (let r = 0; r < fpEstado.height; r++) {
+                for (let c = 0; c < fpEstado.width; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'fp-cell';
+                    cell.dataset.r = r; cell.dataset.c = c;
+                    const k = cellKey(r, c);
+                    const room = roomByCell[k];
+                    if (room) {
+                        cell.classList.add('has-room', 'room-label');
+                        cell.style.background = room.color;
+                        cell.dataset.room = room.nombre;
+                    }
+                    if (compByCell[k]) {
+                        const co = compByCell[k];
+                        const badge = document.createElement('div');
+                        badge.className = 'fp-comp-in-canvas';
+                        badge.innerHTML = `<div class="fi-ip">${co.ip}</div><div class="fi-name">${co.serial || ''}</div>`;
+                        cell.appendChild(badge);
+                    }
+                    cell.addEventListener('mousedown', (e) => { e.preventDefault(); pintarCelda(r, c); });
+                    cell.addEventListener('mouseenter', (e) => { if (fpEstado.dibujando && e.buttons === 1) pintarCelda(r, c); });
+                    cell.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+                    cell.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        if (fpDragCompId === null || fpDragCompId === undefined) return;
+                        const comp = fpCompsList[fpDragCompId];
+                        if (comp) colocarComputadora(comp, k);
+                        fpDragCompId = null;
+                    });
+                    canvas.appendChild(cell);
+                }
+            }
+            renderRoomList();
+        }
+
+        function pintarCelda(r, c) {
+            if (!fpEstado.dibujando) return;
+            const k = cellKey(r, c);
+            let room = fpEstado.rooms.find(ro => ro.nombre === fpEstado.habitacionActual.nombre);
+            if (!room) {
+                room = { nombre: fpEstado.habitacionActual.nombre, color: fpEstado.habitacionActual.color, cells: [] };
+                fpEstado.rooms.push(room);
+            }
+            fpEstado.rooms.forEach(ro => {
+                const i = ro.cells.indexOf(k);
+                if (i !== -1) ro.cells.splice(i, 1);
+            });
+            if (!room.cells.includes(k)) room.cells.push(k);
+            renderCuadricula();
+        }
+
+        function toggleDibujarHabitacion() {
+            fpEstado.dibujando = !fpEstado.dibujando;
+            document.getElementById('fpDrawBtn').classList.toggle('fp-draw-active', fpEstado.dibujando);
+            fpEstado.habitacionActual.nombre = document.getElementById('fpRoomName').value || 'Oficina';
+            fpEstado.habitacionActual.color = document.getElementById('fpColor').value || '#3b82f6';
+        }
+
+        function renderRoomList() {
+            const cont = document.getElementById('fpRoomList');
+            if (fpEstado.rooms.length === 0) {
+                cont.innerHTML = '<div class="fp-hint">Aún no hay habitaciones dibujadas.</div>';
+                return;
+            }
+            cont.innerHTML = '';
+            fpEstado.rooms.forEach((room, idx) => {
+                const chip = document.createElement('span');
+                chip.className = 'fp-room-chip';
+                chip.style.background = room.color;
+                chip.textContent = `${room.nombre} (${room.cells.length}) ✕`;
+                chip.title = 'Clic para eliminar la habitación';
+                chip.addEventListener('click', () => eliminarHabitacion(idx));
+                cont.appendChild(chip);
+            });
+        }
+
+        function eliminarHabitacion(idx) {
+            const room = fpEstado.rooms[idx];
+            if (!room) return;
+            const set = new Set(room.cells);
+            fpEstado.computadoras = fpEstado.computadoras.filter(co => !set.has(co.cell));
+            fpEstado.rooms.splice(idx, 1);
+            renderCuadricula();
+        }
+
+        function colocarComputadora(comp, cell) {
+            fpEstado.computadoras = fpEstado.computadoras.filter(co => co.id !== comp.id);
+            fpEstado.computadoras.push({ id: comp.id, serial: comp.serial || '-', ip: comp.ip || '-', depto: comp.depto || '-', cell: cell });
+            renderCuadricula();
+        }
+
+        function limpiarPlano() {
+            if (!window.confirm('¿Limpiar todo el plano? Esta acción quita todas las habitaciones y computadoras.')) return;
+            fpEstado.rooms = [];
+            fpEstado.computadoras = [];
+            renderCuadricula();
+        }
+
+        async function guardarPlano() {
+            const payload = {
+                name: document.getElementById('fpName').value || 'Plano del edificio',
+                grid_width: fpEstado.width,
+                grid_height: fpEstado.height,
+                data: JSON.stringify({ rooms: fpEstado.rooms, computadoras: fpEstado.computadoras })
+            };
             try {
-                window.location.href = customUrl;
+                if (fpPlanoId) {
+                    await apiRequest(`/api/floor-plans/${fpPlanoId}`, 'PUT', payload);
+                } else {
+                    const created = await apiRequest('/api/floor-plans', 'POST', payload);
+                    fpPlanoId = created.id;
+                }
+                fpEstado.name = payload.name;
+                showNotification('Plano guardado correctamente.');
             } catch (error) {
-                console.error('No se pudo abrir Packet Tracer:', error);
+                showNotification(error.message || 'No se pudo guardar el plano.');
+            }
+        }
+
+        async function cargarPlanoExistente() {
+            try {
+                const plans = await apiRequest('/api/floor-plans', 'GET');
+                if (plans && plans.length > 0) {
+                    const p = plans[0];
+                    fpPlanoId = p.id;
+                    fpEstado.width = p.grid_width || 8;
+                    fpEstado.height = p.grid_height || 6;
+                    fpEstado.name = p.name || 'Plano del edificio';
+                    document.getElementById('fpWidth').value = fpEstado.width;
+                    document.getElementById('fpHeight').value = fpEstado.height;
+                    document.getElementById('fpName').value = fpEstado.name;
+                    if (p.data) {
+                        try {
+                            const d = JSON.parse(p.data);
+                            fpEstado.rooms = d.rooms || [];
+                            fpEstado.computadoras = d.computadoras || [];
+                        } catch (err) { fpEstado.rooms = []; fpEstado.computadoras = []; }
+                    }
+                }
+            } catch (error) {
+                console.error('No se pudo cargar el plano:', error);
+            }
+        }
+
+        async function cargarComputadorasPlano() {
+            const cont = document.getElementById('fpComps');
+            cont.innerHTML = '<div class="fp-hint">Cargando computadoras...</div>';
+            try {
+                const data = await apiRequest('/api/equipos', 'GET');
+                fpCompsList = (data || []);
+                const comps = fpCompsList.filter(co => co.ip && co.ip !== '-');
+                if (comps.length === 0) { cont.innerHTML = '<div class="fp-hint">No hay computadoras con IP registradas.</div>'; return; }
+                cont.innerHTML = '';
+                comps.forEach(comp => {
+                    const origIdx = fpCompsList.indexOf(comp);
+                    const el = document.createElement('div');
+                    el.className = 'fp-comp';
+                    el.draggable = true;
+                    el.innerHTML = `<div class="fp-ip">${comp.ip}</div><div class="fp-serial">${comp.serial || 'sin serial'}</div>`;
+                    el.addEventListener('dragstart', (e) => { fpDragCompId = origIdx; e.dataTransfer.effectAllowed = 'copy'; });
+                    cont.appendChild(el);
+                });
+            } catch (error) {
+                cont.innerHTML = '<div class="fp-hint">No se pudieron cargar las computadoras.</div>';
             }
         }
 

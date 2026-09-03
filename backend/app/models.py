@@ -71,3 +71,15 @@ class PrinterRecord(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     department = relationship("Department", back_populates="printer_records")
+
+
+class FloorPlan(Base):
+    __tablename__ = "floor_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(120), nullable=False, default="Plano del edificio")
+    grid_width = Column(Integer, nullable=False, default=8)
+    grid_height = Column(Integer, nullable=False, default=6)
+    data = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.config import APP_TITLE, APP_VERSION, DEBUG
 from app.database import Base, SessionLocal, engine, get_db
-from app.models import ComputerRecord, Department, PrinterRecord, User
+from app.models import ComputerRecord, Department, FloorPlan, PrinterRecord, User
 from app.schemas import (
     AuthResponse,
     ComputerRecordPayload,
+    FloorPlanPayload,
     GenericRecordPayload,
     LoginRequest,
     PrinterRecordPayload,
@@ -404,3 +405,69 @@ def list_printers(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
 def list_computers(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     records = db.query(ComputerRecord).order_by(ComputerRecord.id).all()
     return [computer_to_dict(item) for item in records]
+
+
+@app.get("/api/floor-plans")
+def list_floor_plans(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    plans = db.query(FloorPlan).order_by(FloorPlan.id).all()
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "grid_width": p.grid_width,
+            "grid_height": p.grid_height,
+            "data": p.data,
+        }
+        for p in plans
+    ]
+
+
+@app.post("/api/floor-plans", status_code=status.HTTP_201_CREATED)
+def create_floor_plan(payload: FloorPlanPayload, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    plan = FloorPlan(
+        name=payload.name or "Plano del edificio",
+        grid_width=payload.grid_width or 8,
+        grid_height=payload.grid_height or 6,
+        data=payload.data,
+    )
+    db.add(plan)
+    db.commit()
+    db.refresh(plan)
+    return {
+        "id": plan.id,
+        "name": plan.name,
+        "grid_width": plan.grid_width,
+        "grid_height": plan.grid_height,
+        "data": plan.data,
+    }
+
+
+@app.put("/api/floor-plans/{plan_id}")
+def update_floor_plan(plan_id: int, payload: FloorPlanPayload, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    plan = db.query(FloorPlan).filter(FloorPlan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano no encontrado.")
+    plan.name = payload.name or plan.name
+    plan.grid_width = payload.grid_width or plan.grid_width
+    plan.grid_height = payload.grid_height or plan.grid_height
+    if payload.data is not None:
+        plan.data = payload.data
+    db.commit()
+    db.refresh(plan)
+    return {
+        "id": plan.id,
+        "name": plan.name,
+        "grid_width": plan.grid_width,
+        "grid_height": plan.grid_height,
+        "data": plan.data,
+    }
+
+
+@app.delete("/api/floor-plans/{plan_id}")
+def delete_floor_plan(plan_id: int, db: Session = Depends(get_db)) -> Dict[str, str]:
+    plan = db.query(FloorPlan).filter(FloorPlan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano no encontrado.")
+    db.delete(plan)
+    db.commit()
+    return {"message": "Plano eliminado", "id": plan_id}

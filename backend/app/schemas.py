@@ -78,3 +78,10 @@ class GenericRecordPayload(BaseModel):
     operativo: str = "Sí"
     puerto: str = "-"
     nota: str = "-"
+
+
+class FloorPlanPayload(BaseModel):
+    name: str = "Plano del edificio"
+    grid_width: int = 8
+    grid_height: int = 6
+    data: Optional[str] = None
