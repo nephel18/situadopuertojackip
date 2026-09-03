@@ -1066,9 +1066,11 @@
         .fp-wall { stroke:#334155; fill:none; stroke-linecap:round; }
         .fp-wall-preview { stroke:#3b82f6; stroke-dasharray:6 4; fill:none; stroke-linecap:round; }
         .fp-canvas-hint { position:absolute; top:10px; left:12px; z-index:5; max-width:340px; background:rgba(255,255,255,.8); padding:6px 8px; border-radius:6px; }
-        .fp-comp-on-floor { position:absolute; transform:translate(-50%,-50%); background:#1e3a8a; color:#fff; border:2px solid #3b82f6; border-radius:6px; font-size:11px; font-weight:700; padding:3px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; line-height:1.15; z-index:4; user-select:none; }
+        .fp-comp-on-floor { position:absolute; transform:translate(-50%,-50%); background:#1e3a8a; color:#fff; border:2px solid #3b82f6; border-radius:8px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; line-height:1.15; z-index:4; user-select:none; min-width:70px; text-align:center; }
+        .fp-comp-on-floor .fi-icon { color:#93c5fd; margin-bottom:2px; display:flex; }
         .fp-comp-on-floor .fi-ip { font-size:12px; }
-        .fp-comp-on-floor .fi-serial { font-size:9px; opacity:.85; }
+        .fp-comp-on-floor .fi-puerto { font-size:9px; background:rgba(255,255,255,.18); border-radius:4px; padding:1px 5px; margin-top:2px; }
+        .fp-comp-on-floor .fi-serial { font-size:9px; opacity:.85; margin-top:1px; }
         .fp-comp-on-floor:hover { box-shadow:0 0 0 2px rgba(59,130,246,.5); }
         .floor-plan-side { width:320px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; max-height:100%; overflow-y:auto; }
         .floor-plan-side h4 { margin:0 0 6px; font-size:13px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:6px; }
@@ -1076,9 +1078,12 @@
         .fp-guide-list { margin:0; padding-left:16px; font-size:12px; color:#475569; }
         .fp-guide-list li { margin-bottom:3px; }
         .fp-comps { display:flex; flex-direction:column; gap:6px; }
-        .fp-comp { background:#fff; border:1px solid #dbe4ef; border-radius:8px; padding:7px 9px; cursor:grab; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; }
+        .fp-comp { background:#fff; border:1px solid #dbe4ef; border-radius:8px; padding:7px 9px; cursor:grab; font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
         .fp-comp:active { cursor:grabbing; }
+        .fp-comp .fp-ico { color:#0288d1; flex-shrink:0; display:flex; }
+        .fp-comp .fp-info { display:flex; flex-direction:column; line-height:1.2; }
         .fp-comp .fp-ip { color:#0288d1; font-weight:700; }
+        .fp-comp .fp-puerto { color:#059669; font-size:10px; }
         .fp-comp .fp-serial { color:#64748b; font-size:11px; }
         .fp-hint { font-size:12px; color:#64748b; font-style:italic; }
         #fpWallBtn.fp-draw-active { background:#334155 !important; color:#fff !important; }
@@ -1642,6 +1647,10 @@
             if (canvas) canvas.classList.remove('fp-erasing');
         }
 
+        function compIcono() {
+            return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M6 21h12"></path><path d="M12 17v4"></path></svg>';
+        }
+
         function renderParedes() {
             const wallsSvg = document.getElementById('fpWalls');
             if (!wallsSvg) return;
@@ -1673,7 +1682,7 @@
                 el.className = 'fp-comp-on-floor';
                 el.style.left = co.x + 'px';
                 el.style.top = co.y + 'px';
-                el.innerHTML = `<div class="fi-ip">${co.ip}</div><div class="fi-serial">${co.serial || ''}</div>`;
+                el.innerHTML = `<div class="fi-icon">${compIcono()}</div><div class="fi-ip">${co.ip}</div><div class="fi-puerto">Puerto ${co.puerto || '-'}</div><div class="fi-serial">${co.serial || ''}</div>`;
                 el.title = 'Clic para quitar del plano';
                 el.addEventListener('click', () => {
                     fpEstado.computadoras = fpEstado.computadoras.filter(c => c.id !== co.id);
@@ -1797,7 +1806,7 @@
             if (!comp) return;
             const p = posicionEnPlano(e);
             fpEstado.computadoras = fpEstado.computadoras.filter(c => c.id !== comp.id);
-            fpEstado.computadoras.push({ id: comp.id, serial: comp.serial || '-', ip: comp.ip || '-', depto: comp.depto || '-', x: Math.round(p.x), y: Math.round(p.y) });
+            fpEstado.computadoras.push({ id: comp.id, serial: comp.serial || '-', ip: comp.ip || '-', puerto: comp.puerto || comp.ethernet_port || '-', depto: comp.depto || '-', x: Math.round(p.x), y: Math.round(p.y) });
             renderComputadoras();
         }
 
@@ -1971,7 +1980,7 @@
                     const el = document.createElement('div');
                     el.className = 'fp-comp';
                     el.draggable = true;
-                    el.innerHTML = `<div class="fp-ip">${comp.ip}</div><div class="fp-serial">${comp.serial || 'sin serial'}</div>`;
+                    el.innerHTML = `<div class="fp-ico">${compIcono()}</div><div class="fp-info"><div class="fp-ip">${comp.ip}</div><div class="fp-puerto">Puerto ${comp.puerto || '-'}</div><div class="fp-serial">${comp.serial || 'sin serial'}</div></div>`;
                     el.addEventListener('dragstart', (e) => { fpDragCompId = origIdx; e.dataTransfer.effectAllowed = 'copy'; });
                     cont.appendChild(el);
                 });
