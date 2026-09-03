@@ -1082,6 +1082,10 @@
         .fp-comp .fp-serial { color:#64748b; font-size:11px; }
         .fp-hint { font-size:12px; color:#64748b; font-style:italic; }
         #fpWallBtn.fp-draw-active { background:#334155 !important; color:#fff !important; }
+        #fpEraseBtn.fp-eraser-active { background:#ef4444 !important; color:#fff !important; }
+        #fpCanvas.fp-erasing { cursor:crosshair; }
+        .fp-walls.fp-erasing-svg { pointer-events:none; }
+        .fp-wall.fp-wall-hover { stroke:#ef4444; stroke-width:8; }
         @media (max-width:900px){ .floor-plan-body{ flex-direction:column; } .floor-plan-side{ width:100%; max-height:none; } .fp-canvas{ height:420px; } }
 
         /* BANNER DE NOTIFICACIONES */
@@ -1505,6 +1509,7 @@
                     </select>
                 </label>
                 <button type="button" id="fpWallBtn" class="btn-secondary" onclick="toggleTrazoPared()">🧱 Trazar pared</button>
+                <button type="button" id="fpEraseBtn" class="btn-secondary" onclick="toggleBorrarPared()" title="Activa el borrador para eliminar un muro al hacer clic encima">🧽 Borrar muro</button>
                 <button type="button" class="btn-warning fp-btn" onclick="deshacerPared()" title="Deshacer último muro">↩ Deshacer</button>
                 <button type="button" class="btn-danger fp-btn" onclick="limpiarPlano()">🧹 Limpiar</button>
                 <button type="button" class="btn-primary fp-btn" onclick="guardarPlano()">💾 Guardar</button>
@@ -1589,6 +1594,7 @@
             walls: [],
             computadoras: [],
             dibujando: false,
+            borrando: false,
             inicioPared: null,
             previo: null
         };
@@ -1625,10 +1631,15 @@
 
         function resetearModoPared() {
             fpEstado.dibujando = false;
+            fpEstado.borrando = false;
             fpEstado.inicioPared = null;
             fpEstado.previo = null;
             const btn = document.getElementById('fpWallBtn');
             if (btn) btn.classList.remove('fp-draw-active');
+            const ebtn = document.getElementById('fpEraseBtn');
+            if (ebtn) ebtn.classList.remove('fp-eraser-active');
+            const canvas = document.getElementById('fpCanvas');
+            if (canvas) canvas.classList.remove('fp-erasing');
         }
 
         function renderParedes() {
@@ -1681,9 +1692,31 @@
 
         function toggleTrazoPared() {
             fpEstado.dibujando = !fpEstado.dibujando;
+            if (fpEstado.dibujando) {
+                fpEstado.borrando = false;
+                const ebtn = document.getElementById('fpEraseBtn');
+                if (ebtn) ebtn.classList.remove('fp-eraser-active');
+            }
             fpEstado.inicioPared = null;
             fpEstado.previo = null;
             document.getElementById('fpWallBtn').classList.toggle('fp-draw-active', fpEstado.dibujando);
+            const canvas = document.getElementById('fpCanvas');
+            if (canvas) canvas.classList.toggle('fp-erasing', false);
+            renderParedes();
+        }
+
+        function toggleBorrarPared() {
+            fpEstado.borrando = !fpEstado.borrando;
+            if (fpEstado.borrando) {
+                fpEstado.dibujando = false;
+                fpEstado.inicioPared = null;
+                fpEstado.previo = null;
+                const btn = document.getElementById('fpWallBtn');
+                if (btn) btn.classList.remove('fp-draw-active');
+            }
+            document.getElementById('fpEraseBtn').classList.toggle('fp-eraser-active', fpEstado.borrando);
+            const canvas = document.getElementById('fpCanvas');
+            if (canvas) canvas.classList.toggle('fp-erasing', fpEstado.borrando);
             renderParedes();
         }
 
@@ -1692,9 +1725,37 @@
             return { x: e.clientX - rect.left, y: e.clientY - rect.top };
         }
 
+        function distanciaPuntoSegmento(px, py, x1, y1, x2, y2) {
+            const dx = x2 - x1, dy = y2 - y1;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+            let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+            t = Math.max(0, Math.min(1, t));
+            const cx = x1 + t * dx, cy = y1 + t * dy;
+            return Math.hypot(px - cx, py - cy);
+        }
+
+        function indiceMuroEn(p) {
+            const umbral = 12;
+            let mejor = -1, menor = Infinity;
+            fpEstado.walls.forEach((w, i) => {
+                const d = distanciaPuntoSegmento(p.x, p.y, w.x1, w.y1, w.x2, w.y2);
+                if (d < umbral && d < menor) { menor = d; mejor = i; }
+            });
+            return mejor;
+        }
+
         function manejadorClickCanvas(e) {
-            if (!fpEstado.dibujando) return;
             const p = posicionEnPlano(e);
+            if (fpEstado.borrando) {
+                const idx = indiceMuroEn(p);
+                if (idx !== -1) {
+                    fpEstado.walls.splice(idx, 1);
+                    renderParedes();
+                }
+                return;
+            }
+            if (!fpEstado.dibujando) return;
             if (!fpEstado.inicioPared) {
                 fpEstado.inicioPared = p;
                 fpEstado.previo = null;
@@ -1714,8 +1775,16 @@
         }
 
         function manejadorMoveCanvas(e) {
-            if (!fpEstado.dibujando || !fpEstado.inicioPared) return;
             const p = posicionEnPlano(e);
+            if (fpEstado.borrando) {
+                const svg = document.getElementById('fpWalls');
+                svg.querySelectorAll('.fp-wall').forEach((ln, i) => {
+                    ln.classList.remove('fp-wall-hover');
+                    if (i === indiceMuroEn(p)) ln.classList.add('fp-wall-hover');
+                });
+                return;
+            }
+            if (!fpEstado.dibujando || !fpEstado.inicioPared) return;
             fpEstado.previo = { x1: fpEstado.inicioPared.x, y1: fpEstado.inicioPared.y, x2: p.x, y2: p.y };
             renderParedes();
         }
