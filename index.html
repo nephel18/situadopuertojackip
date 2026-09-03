@@ -1093,6 +1093,33 @@
         .fp-wall.fp-wall-hover { stroke:#ef4444; stroke-width:8; }
         @media (max-width:900px){ .floor-plan-body{ flex-direction:column; } .floor-plan-side{ width:100%; max-height:none; } .fp-canvas{ height:420px; } }
 
+        /* ===== Editor de plano vectorial tipo CAD ===== */
+        .fp-toolgroup { display:flex; align-items:center; gap:3px; flex-wrap:wrap; }
+        .fp-tg-label { font-size:11px; font-weight:700; color:#64748b; margin-right:2px; }
+        .fp-toolbtn { width:34px; height:34px; border:1px solid #dbe4ef; background:#fff; border-radius:8px; cursor:pointer; font-size:16px; line-height:1; display:inline-flex; align-items:center; justify-content:center; color:#334155; }
+        .fp-toolbtn:hover { background:#f1f5f9; }
+        .fp-toolbtn.fp-tool-active { background:#334155; color:#fff; border-color:#334155; }
+        .fp-toolbtn-err.fp-tool-active { background:#ef4444; border-color:#ef4444; }
+        .fp-propbar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:12px; padding:8px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; }
+        .fp-propbar .fp-dim { margin:0; }
+        .fp-propbar input[type=color] { width:36px; height:28px; padding:0; border:1px solid #dbe4ef; border-radius:6px; background:transparent; cursor:pointer; }
+        .fp-dim.snap { font-weight:600; }
+        .fp-cad-cursor { cursor:crosshair !important; }
+        .fp-select-cursor { cursor:default !important; }
+        #fpCanvas.fp-sel-hover { cursor:pointer !important; }
+        #fpCanvas.fp-hover-ok { cursor:pointer !important; }
+        .fp-text-editor { position:absolute; z-index:9; width:220px; padding:4px 8px; font-size:14px; border:2px solid #3b82f6; border-radius:6px; }
+        .fp-layers-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+        .fp-layers-box h4 { display:flex; align-items:center; justify-content:space-between; }
+        .fp-layer-add { border:1px solid #dbe4ef; background:#fff; border-radius:6px; width:22px; height:22px; cursor:pointer; line-height:1; font-size:14px; }
+        .fp-layers { display:flex; flex-direction:column; gap:3px; margin-top:6px; }
+        .fp-layer-row { display:flex; align-items:center; gap:7px; padding:4px 6px; border-radius:6px; cursor:pointer; }
+        .fp-layer-row:hover { background:#eef2f7; }
+        .fp-layer-row.fp-layer-active { background:#dbeafe; }
+        .fp-layer-eye { border:none; background:transparent; cursor:pointer; font-size:13px; padding:0; }
+        .fp-layer-swatch { width:14px; height:14px; border-radius:3px; border:1px solid rgba(0,0,0,.15); flex-shrink:0; }
+        .fp-layer-name { font-size:12px; font-weight:600; color:#334155; }
+
         /* BANNER DE NOTIFICACIONES */
         .toast-notification {
             position: fixed;
@@ -1505,36 +1532,69 @@
 
             <div class="floor-plan-toolbar">
                 <input type="text" id="fpName" class="fp-name-input" value="Plano del edificio" placeholder="Nombre del plano">
-                <label class="fp-dim">Grosor muro
-                    <select id="fpWallThickness">
-                        <option value="4">4 px</option>
-                        <option value="6" selected>6 px</option>
-                        <option value="8">8 px</option>
-                        <option value="10">10 px</option>
+
+                <div class="fp-toolgroup">
+                    <span class="fp-tg-label">Dibujo</span>
+                    <button type="button" class="fp-toolbtn" data-tool="select" id="fpT_select" onclick="activarTool('select')" title="Seleccionar / mover">🖱</button>
+                    <button type="button" class="fp-toolbtn" data-tool="line" id="fpT_line" onclick="activarTool('line')" title="Línea">╱</button>
+                    <button type="button" class="fp-toolbtn" data-tool="polyline" id="fpT_polyline" onclick="activarTool('polyline')" title="Polilínea">㇋</button>
+                    <button type="button" class="fp-toolbtn" data-tool="rect" id="fpT_rect" onclick="activarTool('rect')" title="Rectángulo">▭</button>
+                    <button type="button" class="fp-toolbtn" data-tool="circle" id="fpT_circle" onclick="activarTool('circle')" title="Círculo">◯</button>
+                    <button type="button" class="fp-toolbtn" data-tool="arc" id="fpT_arc" onclick="activarTool('arc')" title="Arco">◠</button>
+                    <button type="button" class="fp-toolbtn" data-tool="text" id="fpT_text" onclick="activarTool('text')" title="Texto">T</button>
+                    <button type="button" class="fp-toolbtn fp-toolbtn-err" data-tool="erase" id="fpT_erase" onclick="activarTool('erase')" title="Borrar objeto">✖</button>
+                </div>
+
+                <button type="button" class="btn-warning fp-btn" onclick="deshacerUltimo()" title="Deshacer último objeto">↩</button>
+                <button type="button" class="btn-danger fp-btn" onclick="limpiarPlano()">🧹</button>
+                <button type="button" class="btn-primary fp-btn" onclick="guardarPlano()">💾</button>
+            </div>
+
+            <div class="fp-propbar">
+                <label class="fp-dim">Capa
+                    <select id="fpLayerSelect" onchange="cambiarCapaActiva()"></select>
+                </label>
+                <label class="fp-dim">Color <input type="color" id="fpColor" value="#1f2937" onchange="propiColor()"></label>
+                <label class="fp-dim">Tipo
+                    <select id="fpLineType" onchange="propiTipo()">
+                        <option value="solid">Sólida</option>
+                        <option value="dashed">Discontinua</option>
+                        <option value="dotted">Punteada</option>
                     </select>
                 </label>
-                <button type="button" id="fpWallBtn" class="btn-secondary" onclick="toggleTrazoPared()">🧱 Trazar pared</button>
-                <button type="button" id="fpEraseBtn" class="btn-secondary" onclick="toggleBorrarPared()" title="Activa el borrador para eliminar un muro al hacer clic encima">🧽 Borrar muro</button>
-                <button type="button" class="btn-warning fp-btn" onclick="deshacerPared()" title="Deshacer último muro">↩ Deshacer</button>
-                <button type="button" class="btn-danger fp-btn" onclick="limpiarPlano()">🧹 Limpiar</button>
-                <button type="button" class="btn-primary fp-btn" onclick="guardarPlano()">💾 Guardar</button>
+                <label class="fp-dim">Grosor
+                    <select id="fpThickness" onchange="propiGrosor()">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="6">6</option>
+                    </select>
+                </label>
+                <label class="fp-dim snap"><input type="checkbox" id="fpSnap" checked onchange="propiSnap()"> Snap</label>
             </div>
 
             <div class="floor-plan-body">
                 <div class="floor-plan-canvas-wrap">
-                    <div id="fpCanvas" class="fp-canvas">
-                        <svg id="fpWalls" class="fp-walls"></svg>
-                        <div id="fpPlaceholder" class="fp-hint fp-canvas-hint">Traza las paredes del edificio haciendo clic para iniciar un muro y clic para terminarlo. Coloca luego las computadoras.</div>
+                    <div id="fpCanvas" class="fp-canvas" onmousemove="fpMousemove(event)" onmouseup="fpMouseup(event)" onmousedown="fpMousedown(event)">
+                        <svg id="fpEntities" class="fp-walls"></svg>
+                        <div id="fpPlaceholder" class="fp-hint fp-canvas-hint">Elige una herramienta de dibujo (línea, rectángulo, círculo…) y haz clic en el lienzo. Arrastra una computadora desde abajo para ubicarla.</div>
                     </div>
                 </div>
                 <div class="floor-plan-side">
+                    <div class="fp-layers-box">
+                        <h4>Capas <button type="button" class="fp-layer-add" onclick="agregarCapa()" title="Nueva capa">＋</button></h4>
+                        <div id="fpLayers" class="fp-layers"></div>
+                    </div>
                     <div class="fp-tools-guide">
                         <h4>Cómo dibujar</h4>
                         <ol class="fp-guide-list">
-                            <li>Pulsa <b>🧱 Trazar pared</b>.</li>
-                            <li>Haz clic en el plano para iniciar un muro.</li>
-                            <li>Haz clic en otro punto para fijar el muro.</li>
-                            <li>Repite para dibujar más muros.</li>
+                            <li>Elige una herramienta (p. ej. <b>Línea</b>).</li>
+                            <li>Haz clic en el lienzo para iniciar y clic para fijar.</li>
+                            <li><b>Polilínea</b>: clic por cada vértice y <b>doble clic</b> para terminar.</li>
+                            <li><b>Arco</b>: clic = centro, clic = inicio, clic = fin.</li>
+                            <li>Usa <b>Seleccionar</b> (🖱) para mover objetos.</li>
+                            <li>Las propiedades (capa, color, tipo, grosor) se aplican a lo que dibujes.</li>
                             <li>Arrastra una computadora desde abajo para ubicarla.</li>
                         </ol>
                     </div>
@@ -1593,16 +1653,33 @@
             return payload;
         }
 
-                // ===== Editor de Plano del Edificio (estructura arquitectónica) =====
+                // ===== Editor de Plano del Edificio (dibujo vectorial tipo CAD) =====
+        const fpLayers = [
+            { id: '0', name: '0', color: '#1f2937', visible: true },
+            { id: 'muros', name: 'Muros', color: '#334155', visible: true },
+            { id: 'puertas', name: 'Puertas', color: '#b45309', visible: true },
+            { id: 'ventanas', name: 'Ventanas', color: '#0891b2', visible: true },
+            { id: 'mobiliario', name: 'Mobiliario', color: '#7c3aed', visible: true },
+            { id: 'texto', name: 'Textos', color: '#dc2626', visible: true },
+            { id: 'cotas', name: 'Cotas', color: '#059669', visible: true }
+        ];
+
         let fpEstado = {
             name: 'Plano del edificio',
-            walls: [],
+            shapes: [],
             computadoras: [],
-            dibujando: false,
-            borrando: false,
-            inicioPared: null,
-            previo: null
+            tool: 'select',
+            layer: '0',
+            color: '#1f2937',
+            lineType: 'solid',
+            lweight: 2,
+            snap: true,
+            draft: null,
+            selId: null,
+            dragId: null,
+            dragOff: { x: 0, y: 0 }
         };
+        let fpCounter = 0;
         let fpPlanoId = null;
         let fpPlans = [];
         let fpCompsList = [];
@@ -1613,64 +1690,491 @@
                 showNotification('Solo los administradores pueden editar el plano del edificio.');
                 return;
             }
-            resetearModoPared();
             document.getElementById('fpName').value = fpEstado.name;
             registrarEventosPlanos();
             cargarComputadorasPlano();
-            cargarTodosLosPlanos().then(() => renderPlano());
+            cargarTodosLosPlanos().then(() => {
+                document.getElementById('fpColor').value = fpEstado.color;
+                document.getElementById('fpLineType').value = fpEstado.lineType;
+                document.getElementById('fpThickness').value = String(fpEstado.lweight);
+                llenarSelectCapas();
+                activarTool('select');
+            });
             cerrarMenusDesplegables();
             document.getElementById('modalFloorPlan').style.display = 'flex';
         }
 
         function cerrarModalFloorPlan() {
             document.getElementById('modalFloorPlan').style.display = 'none';
+            cancelarBorrador();
         }
 
         function registrarEventosPlanos() {
             const canvas = document.getElementById('fpCanvas');
-            canvas.onclick = manejadorClickCanvas;
-            canvas.onmousemove = manejadorMoveCanvas;
+            canvas.onclick = fpClick;
+            canvas.ondblclick = (e) => { finalizarPolilinea(); };
             canvas.ondragover = (e) => e.preventDefault();
             canvas.ondrop = manejadorDrop;
         }
 
-        function resetearModoPared() {
-            fpEstado.dibujando = false;
-            fpEstado.borrando = false;
-            fpEstado.inicioPared = null;
-            fpEstado.previo = null;
-            const btn = document.getElementById('fpWallBtn');
-            if (btn) btn.classList.remove('fp-draw-active');
-            const ebtn = document.getElementById('fpEraseBtn');
-            if (ebtn) ebtn.classList.remove('fp-eraser-active');
-            const canvas = document.getElementById('fpCanvas');
-            if (canvas) canvas.classList.remove('fp-erasing');
+        function finalizarPolilinea() {
+            const d = fpEstado.draft;
+            if (!d || d.t !== 'polyline') return;
+            if (d.pts.length >= 2) {
+                fpEstado.shapes.push({ id: nuevaId(), type: 'polyline', pts: d.pts.map(pp => ({ x: pp.x, y: pp.y })), layer: fpEstado.layer, color: fpEstado.color, lineType: fpEstado.lineType, lweight: fpEstado.lweight });
+            }
+            cancelarBorrador();
+            renderPlano();
         }
 
         function compIcono() {
             return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M6 21h12"></path><path d="M12 17v4"></path></svg>';
         }
 
-        function renderParedes() {
-            const wallsSvg = document.getElementById('fpWalls');
-            if (!wallsSvg) return;
-            wallsSvg.innerHTML = '';
-            if (fpEstado.previo && fpEstado.dibujando) {
-                const lineP = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                lineP.setAttribute('x1', fpEstado.previo.x1); lineP.setAttribute('y1', fpEstado.previo.y1);
-                lineP.setAttribute('x2', fpEstado.previo.x2); lineP.setAttribute('y2', fpEstado.previo.y2);
-                lineP.setAttribute('stroke-width', 6);
-                lineP.setAttribute('class', 'fp-wall-preview');
-                wallsSvg.appendChild(lineP);
-            }
-            fpEstado.walls.forEach(w => {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', w.x1); line.setAttribute('y1', w.y1);
-                line.setAttribute('x2', w.x2); line.setAttribute('y2', w.y2);
-                line.setAttribute('stroke-width', w.thick || 6);
-                line.setAttribute('class', 'fp-wall');
-                wallsSvg.appendChild(line);
+        function activarTool(t) {
+            if (fpEstado.tool === 'text') quitarEditorTexto();
+            cancelarBorrador();
+            fpEstado.selId = null;
+            fpEstado.tool = t;
+            document.querySelectorAll('.fp-toolbtn').forEach(b => b.classList.toggle('fp-tool-active', b.dataset.tool === t));
+            if (t === 'select') canvasCursor(); else document.getElementById('fpCanvas').classList.add(t === 'erase' ? 'fp-erasing' : 'fp-cad-cursor');
+            renderPlano();
+        }
+
+        function canvasCursor() {
+            const c = document.getElementById('fpCanvas');
+            c.classList.remove('fp-erasing', 'fp-cad-cursor');
+            c.classList.add('fp-select-cursor');
+        }
+
+        function propiColor() { fpEstado.color = document.getElementById('fpColor').value; }
+        function propiTipo() { fpEstado.lineType = document.getElementById('fpLineType').value; }
+        function propiGrosor() { fpEstado.lweight = parseInt(document.getElementById('fpThickness').value, 10) || 2; }
+        function propiSnap() { fpEstado.snap = document.getElementById('fpSnap').checked; }
+
+        function posicionEnPlano(e) {
+            const rect = document.getElementById('fpCanvas').getBoundingClientRect();
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
+
+        function nuevaId() { fpCounter += 1; return 's' + fpCounter; }
+
+        function layerById(id) { return fpLayers.find(l => l.id === id) || fpLayers[0]; }
+
+        function capaCapaDe(shape) {
+            return layerById(shape.layer || '0');
+        }
+
+        function llenarSelectCapas() {
+            const sel = document.getElementById('fpLayerSelect');
+            sel.innerHTML = '';
+            fpLayers.forEach(l => sel.add(new Option(l.name, l.id)));
+            sel.value = fpEstado.layer;
+        }
+
+        function cambiarCapaActiva() {
+            fpEstado.layer = document.getElementById('fpLayerSelect').value;
+            fpEstado.color = layerById(fpEstado.layer).color;
+            document.getElementById('fpColor').value = fpEstado.color;
+        }
+
+        function renderCapas() {
+            const box = document.getElementById('fpLayers');
+            box.innerHTML = '';
+            fpLayers.forEach(l => {
+                const row = document.createElement('div');
+                row.className = 'fp-layer-row';
+                const eye = document.createElement('button');
+                eye.type = 'button';
+                eye.className = 'fp-layer-eye';
+                eye.textContent = l.visible ? '👁' : '🚫';
+                eye.title = l.visible ? 'Ocultar capa' : 'Mostrar capa';
+                eye.onclick = () => { l.visible = !l.visible; renderCapas(); renderPlano(); };
+                const sw = document.createElement('span');
+                sw.className = 'fp-layer-swatch';
+                sw.style.background = l.color;
+                const name = document.createElement('span');
+                name.className = 'fp-layer-name';
+                name.textContent = l.name;
+                name.onclick = () => { fpEstado.layer = l.id; fpEstado.color = l.color; document.getElementById('fpLayerSelect').value = l.id; document.getElementById('fpColor').value = l.color; renderCapas(); };
+                row.append(eye, sw, name);
+                if (l.id === fpEstado.layer) row.classList.add('fp-layer-active');
+                box.appendChild(row);
             });
+        }
+
+        function agregarCapa() {
+            const nombre = window.prompt('Nombre de la nueva capa:');
+            if (!nombre || !nombre.trim()) return;
+            const id = 'capa' + (fpLayers.length + 1);
+            fpLayers.push({ id, name: nombre.trim(), color: '#059669', visible: true });
+            llenarSelectCapas();
+            renderCapas();
+        }
+
+        function snapPunto(p) {
+            if (!fpEstado.snap) return { x: p.x, y: p.y, linea: false };
+            const g = 20;
+            let out = { x: Math.round(p.x / g) * g, y: Math.round(p.y / g) * g };
+            return { x: out.x, y: out.y, linea: false };
+        }
+
+        function distanciaPuntoSegmento(px, py, x1, y1, x2, y2) {
+            const dx = x2 - x1, dy = y2 - y1;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+            let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+            t = Math.max(0, Math.min(1, t));
+            const cx = x1 + t * dx, cy = y1 + t * dy;
+            return Math.hypot(px - cx, py - cy);
+        }
+
+        function entidadEn(p, tol = 12) {
+            let mejor = null, menor = Infinity;
+            fpEstado.shapes.forEach(s => {
+                if (!capaCapaDe(s).visible) return;
+                const d = distanciaAEntidad(p, s);
+                if (d < tol && d < menor) { menor = d; mejor = s; }
+            });
+            return mejor;
+        }
+
+        function distanciaAEntidad(p, s) {
+            switch (s.type) {
+                case 'line':
+                    return distanciaPuntoSegmento(p.x, p.y, s.x1, s.y1, s.x2, s.y2);
+                case 'polyline':
+                    let md = Infinity;
+                    for (let i = 0; i < s.pts.length - 1; i++) {
+                        md = Math.min(md, distanciaPuntoSegmento(p.x, p.y, s.pts[i].x, s.pts[i].y, s.pts[i + 1].x, s.pts[i + 1].y));
+                    }
+                    return md;
+                case 'rect':
+                    const a = s.rect ? s : null;
+                    const x0 = a.x0, y0 = a.y0, x1 = a.x1, y1 = a.y1;
+                    const d1 = distanciaPuntoSegmento(p.x, p.y, x0, y0, x1, y0);
+                    const d2 = distanciaPuntoSegmento(p.x, p.y, x1, y0, x1, y1);
+                    const d3 = distanciaPuntoSegmento(p.x, p.y, x1, y1, x0, y1);
+                    const d4 = distanciaPuntoSegmento(p.x, p.y, x0, y1, x0, y0);
+                    return Math.min(d1, d2, d3, d4);
+                case 'circle':
+                    return Math.abs(Math.hypot(p.x - s.cx, p.y - s.cy) - s.r);
+                case 'arc':
+                    return Math.abs(Math.hypot(p.x - s.cx, p.y - s.cy) - s.r);
+                case 'text':
+                    return Math.hypot(p.x - s.x, p.y - s.y);
+                default:
+                    return Infinity;
+            }
+        }
+
+        function soporteEntidad(s) {
+            switch (s.type) {
+                case 'line': return [[s.x1, s.y1], [s.x2, s.y2]];
+                case 'polyline': return s.pts.map(pp => [pp.x, pp.y]);
+                case 'rect': return [[s.x0, s.y0], [s.x1, s.y1]];
+                case 'circle': return [[s.cx, s.cy]];
+                case 'arc': return [[s.cx, s.cy]];
+                case 'text': return [[s.x, s.y]];
+                default: return [];
+            }
+        }
+
+        function desplazarEntidad(s, dx, dy) {
+            switch (s.type) {
+                case 'line': s.x1 += dx; s.y1 += dy; s.x2 += dx; s.y2 += dy; break;
+                case 'polyline': s.pts.forEach(pp => { pp.x += dx; pp.y += dy; }); break;
+                case 'rect': s.x0 += dx; s.y0 += dy; s.x1 += dx; s.y1 += dy; break;
+                case 'circle': s.cx += dx; s.cy += dy; break;
+                case 'arc': s.cx += dx; s.cy += dy; break;
+                case 'text': s.x += dx; s.y += dy; break;
+            }
+        }
+
+        function dashDe(t) {
+            if (t === 'dashed') return '8,5';
+            if (t === 'dotted') return '2,4';
+            return null;
+        }
+
+        function fpClick(e) {
+            const cvs = document.getElementById('fpCanvas');
+            if (fpEstado.tool === 'text' && cvs.querySelector('.fp-text-editor')) return;
+            const p = posicionEnPlano(e);
+            const t = fpEstado.tool;
+
+            if (t === 'select') {
+                if (fpJustDrag) { fpJustDrag = false; return; }
+                const s = entidadEn(p, 12);
+                if (s) { fpEstado.selId = s.id; renderPlano(); }
+                else { fpEstado.selId = null; renderPlano(); }
+                return;
+            }
+            if (t === 'erase') {
+                const s = entidadEn(p, 12);
+                if (s) {
+                    fpEstado.shapes = fpEstado.shapes.filter(x => x.id !== s.id);
+                    fpEstado.selId = null;
+                    renderPlano();
+                }
+                return;
+            }
+            if (t === 'text') {
+                colocarEditorTexto(p);
+                return;
+            }
+
+            if (!fpEstado.draft) {
+                fpEstado.draft = { t, inicio: { x: p.x, y: p.y }, pts: [{ x: p.x, y: p.y }], fin: null };
+                renderPlano();
+                return;
+            }
+
+            const d = fpEstado.draft;
+            if (d.t === 'line') {
+                if (Math.hypot(p.x - d.inicio.x, p.y - d.inicio.y) < 4) return;
+                fpEstado.shapes.push({ id: nuevaId(), type: 'line', x1: d.inicio.x, y1: d.inicio.y, x2: p.x, y2: p.y, layer: fpEstado.layer, color: fpEstado.color, lineType: fpEstado.lineType, lweight: fpEstado.lweight });
+                cancelarBorrador(); renderPlano(); return;
+            }
+            if (d.t === 'rect') {
+                if (Math.hypot(p.x - d.inicio.x, p.y - d.inicio.y) < 4) return;
+                fpEstado.shapes.push({ id: nuevaId(), type: 'rect', x0: d.inicio.x, y0: d.inicio.y, x1: p.x, y1: p.y, layer: fpEstado.layer, color: fpEstado.color, lineType: fpEstado.lineType, lweight: fpEstado.lweight });
+                cancelarBorrador(); renderPlano(); return;
+            }
+            if (d.t === 'circle') {
+                const r = Math.hypot(p.x - d.inicio.x, p.y - d.inicio.y);
+                if (r < 4) return;
+                fpEstado.shapes.push({ id: nuevaId(), type: 'circle', cx: d.inicio.x, cy: d.inicio.y, r, layer: fpEstado.layer, color: fpEstado.color, lineType: fpEstado.lineType, lweight: fpEstado.lweight });
+                cancelarBorrador(); renderPlano(); return;
+            }
+            if (d.t === 'arc') {
+                const c = d.inicio;
+                const r0 = Math.hypot(p.x - c.x, p.y - c.y);
+                if (r0 < 4) { fpEstado.draft = null; renderPlano(); return; }
+                if (d.arcpi) {
+                    fpEstado.shapes.push({ id: nuevaId(), type: 'arc', cx: c.x, cy: c.y, r: d.arcr, a1: d.arcini, a2: anguloDe(c, p), layer: fpEstado.layer, color: fpEstado.color, lineType: fpEstado.lineType, lweight: fpEstado.lweight });
+                    cancelarBorrador(); renderPlano(); return;
+                }
+                d.arcr = r0; d.arcini = anguloDe(c, p); d.arcpi = anguloDe(c, p); renderPlano(); return;
+            }
+            if (d.t === 'polyline') {
+                d.pts.push({ x: p.x, y: p.y });
+                renderPlano();
+                return;
+            }
+            cancelarBorrador();
+            renderPlano();
+        }
+
+        function anguloDe(c, p) {
+            return Math.atan2(p.y - c.y, p.x - c.x);
+        }
+
+        function cancelarBorrador() {
+            fpEstado.draft = null;
+        }
+
+        function deshacerUltimo() {
+            if (fpEstado.draft) { cancelarBorrador(); renderPlano(); return; }
+            if (fpEstado.shapes.length === 0) { showNotification('No hay objetos para deshacer.'); return; }
+            fpEstado.shapes.pop();
+            fpEstado.selId = null;
+            renderPlano();
+        }
+
+        function limpiarPlano() {
+            if (!window.confirm('¿Limpiar todo el plano? Se quitan todos los objetos dibujados y las computadoras.')) return;
+            fpEstado.shapes = [];
+            fpEstado.computadoras = [];
+            fpEstado.selId = null;
+            cancelarBorrador();
+            renderPlano();
+        }
+
+        function fpMousemove(e) {
+            const cvs = document.getElementById('fpCanvas');
+            const p = posicionEnPlano(e);
+            if (fpEstado.tool === 'erase') {
+                cvs.classList.remove('fp-hover-ok');
+                if (entidadEn(p, 12)) cvs.classList.add('fp-hover-ok');
+                return;
+            }
+            if (fpEstado.tool === 'text') return;
+            if (fpEstado.dragId) {
+                const s = fpEstado.shapes.find(x => x.id === fpEstado.dragId);
+                if (s) {
+                    const ap = fpEstado.snap ? snapPunto(p) : p;
+                    desplazarEntidad(s, ap.x - fpEstado.dragOff.x, ap.y - fpEstado.dragOff.y);
+                    fpEstado.dragOff = { x: ap.x, y: ap.y };
+                    renderPlano();
+                }
+                return;
+            }
+            if (fpEstado.tool === 'select') { cursorHover(p); return; }
+            const d = fpEstado.draft;
+            if (!d) { return; }
+            drawPreview(p);
+        }
+
+        function fpMouseup(e) {
+            if (fpEstado.dragId) {
+                fpEstado.dragId = null;
+                fpJustDrag = true;
+                renderPlano();
+            }
+        }
+
+        let fpJustDrag = false;
+
+        function fpMousedown(e) {
+            if (fpEstado.tool !== 'select') return;
+            const p = posicionEnPlano(e);
+            fpJustDrag = false;
+            const s = entidadEn(p, 12);
+            if (s) {
+                fpEstado.dragId = s.id;
+                fpEstado.selId = s.id;
+                fpEstado.dragOff = { x: p.x, y: p.y };
+                renderPlano();
+            }
+        }
+
+        function cursorHover(p) {
+            const c = document.getElementById('fpCanvas');
+            c.classList.remove('fp-sel-hover');
+            if (entidadEn(p, 12)) c.classList.add('fp-sel-hover');
+        }
+
+        function drawPreview(p) {
+            const d = fpEstado.draft;
+            const pp = fpEstado.snap ? snapPunto(p) : p;
+            if (d.t === 'line') { fpEstado.draft.preview = { type: 'line', x1: d.inicio.x, y1: d.inicio.y, x2: pp.x, y2: pp.y }; }
+            else if (d.t === 'rect') { fpEstado.draft.preview = { type: 'rect', x0: d.inicio.x, y0: d.inicio.y, x1: pp.x, y1: pp.y }; }
+            else if (d.t === 'circle') { fpEstado.draft.preview = { type: 'circle', cx: d.inicio.x, cy: d.inicio.y, r: Math.hypot(pp.x - d.inicio.x, pp.y - d.inicio.y) }; }
+            else if (d.t === 'arc' && d.arcpi != null) { fpEstado.draft.preview = { type: 'arc', cx: d.inicio.x, cy: d.inicio.y, r: d.arcr, a1: d.arcini, a2: anguloDe(d.inicio, pp) }; }
+            else if (d.t === 'polyline') { fpEstado.draft.preview = { type: 'line', x1: d.pts[d.pts.length - 1].x, y1: d.pts[d.pts.length - 1].y, x2: pp.x, y2: pp.y }; }
+            renderPlano();
+        }
+
+        function colocarEditorTexto(p) {
+            const cvs = document.getElementById('fpCanvas');
+            quitarEditorTexto();
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'fp-text-editor';
+            inp.style.left = (p.x - 40) + 'px';
+            inp.style.top = (p.y - 12) + 'px';
+            inp.placeholder = 'Texto';
+            inp.autofocus = true;
+            cvs.appendChild(inp);
+            inp.focus();
+            const commit = () => {
+                const val = inp.value.trim();
+                quitarEditorTexto();
+                if (val) {
+                    fpEstado.shapes.push({ id: nuevaId(), type: 'text', x: p.x, y: p.y, content: val, fontsize: 14, layer: fpEstado.layer, color: fpEstado.color });
+                    renderPlano();
+                }
+            };
+            inp.onkeydown = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                if (e.key === 'Escape') { quitarEditorTexto(); renderPlano(); }
+            };
+            inp.addEventListener('blur', commit);
+        }
+
+        function quitarEditorTexto() {
+            const cvs = document.getElementById('fpCanvas');
+            const inp = cvs.querySelector('.fp-text-editor');
+            if (inp) inp.remove();
+        }
+
+        function dibujarEntidad(svg, s) {
+            const ns = 'http://www.w3.org/2000/svg';
+            const layer = capaCapaDe(s);
+            if (!layer.visible) return;
+            const color = s.color || layer.color;
+            const dash = s.type === 'text' ? null : dashDe(s.lineType || 'solid');
+            const lw = s.type === 'text' ? 1 : (s.lweight || 2);
+            const sel = fpEstado.selId === s.id;
+            let el;
+            switch (s.type) {
+                case 'line':
+                    el = document.createElementNS(ns, 'line');
+                    el.setAttribute('x1', s.x1); el.setAttribute('y1', s.y1);
+                    el.setAttribute('x2', s.x2); el.setAttribute('y2', s.y2);
+                    break;
+                case 'polyline':
+                    el = document.createElementNS(ns, 'polyline');
+                    el.setAttribute('points', s.pts.map(pp => pp.x + ',' + pp.y).join(' '));
+                    break;
+                case 'rect':
+                    const x0 = Math.min(s.x0, s.x1), y0 = Math.min(s.y0, s.y1);
+                    const w = Math.abs(s.x1 - s.x0), h = Math.abs(s.y1 - s.y0);
+                    el = document.createElementNS(ns, 'rect');
+                    el.setAttribute('x', x0); el.setAttribute('y', y0);
+                    el.setAttribute('width', w); el.setAttribute('height', h);
+                    break;
+                case 'circle':
+                    el = document.createElementNS(ns, 'circle');
+                    el.setAttribute('cx', s.cx); el.setAttribute('cy', s.cy); el.setAttribute('r', s.r);
+                    break;
+                case 'arc':
+                    el = document.createElementNS(ns, 'path');
+                    el.setAttribute('d', pathDeArco(s.cx, s.cy, s.r, s.a1, s.a2));
+                    break;
+                case 'text':
+                    el = document.createElementNS(ns, 'text');
+                    el.setAttribute('x', s.x); el.setAttribute('y', s.y);
+                    el.textContent = s.content;
+                    el.setAttribute('font-size', s.fontsize || 14);
+                    el.setAttribute('font-family', 'Arial, sans-serif');
+                    el.setAttribute('text-anchor', 'middle');
+                    break;
+            }
+            if (!el) return;
+            if (s.type !== 'text') {
+                el.setAttribute('stroke', color);
+                el.setAttribute('stroke-width', lw);
+                el.setAttribute('fill', 'none');
+                if (dash) el.setAttribute('stroke-dasharray', dash);
+            } else {
+                el.setAttribute('fill', color);
+            }
+            if (sel) {
+                el.setAttribute('data-sel', '1');
+                el.setAttribute('filter', 'url(#fpSelGlow)');
+            }
+            svg.appendChild(el);
+        }
+
+        function pathDeArco(cx, cy, r, a1, a2) {
+            const dt = (a2 - a1 + Math.PI * 2) % (Math.PI * 2);
+            const large = dt > Math.PI ? 1 : 0;
+            const sweep = (a2 - a1) >= 0 ? 1 : 0;
+            const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+            const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+            return `M ${x1} ${y1} A ${r} ${r} 0 ${large} ${sweep} ${x2} ${y2}`;
+        }
+
+        function crearFiltroSeleccion(svg) {
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            defs.innerHTML = '<filter id="fpSelGlow" x="-40%" y="-40%" width="180%" height="180%"><feMorphology operator="dilate" radius="2" in="SourceGraphic" result="thick"/><feFlood flood-color="#3b82f6" result="color"/><feComposite in="color" in2="thick" operator="in" result="col"/><feMerge><feMergeNode in="col"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+            svg.insertBefore(defs, svg.firstChild);
+        }
+
+        function renderPlano() {
+            const svg = document.getElementById('fpEntities');
+            svg.innerHTML = '';
+            crearFiltroSeleccion(svg);
+            if (fpEstado.draft && fpEstado.draft.preview) {
+                const pv = Object.assign({}, fpEstado.draft.preview);
+                pv.color = '#ef4444'; pv.lineType = 'dashed'; pv.lweight = 2;
+                dibujarEntidad(svg, pv);
+            }
+            fpEstado.shapes.forEach(s => dibujarEntidad(svg, s));
+            renderComputadoras();
+            renderCapas();
         }
 
         function renderComputadoras() {
@@ -1691,111 +2195,7 @@
                 canvas.appendChild(el);
             });
             const ph = document.getElementById('fpPlaceholder');
-            if (ph) ph.style.display = (fpEstado.walls.length === 0 && fpEstado.computadoras.length === 0) ? 'block' : 'none';
-        }
-
-        function renderPlano() {
-            renderParedes();
-            renderComputadoras();
-        }
-
-        function toggleTrazoPared() {
-            fpEstado.dibujando = !fpEstado.dibujando;
-            if (fpEstado.dibujando) {
-                fpEstado.borrando = false;
-                const ebtn = document.getElementById('fpEraseBtn');
-                if (ebtn) ebtn.classList.remove('fp-eraser-active');
-            }
-            fpEstado.inicioPared = null;
-            fpEstado.previo = null;
-            document.getElementById('fpWallBtn').classList.toggle('fp-draw-active', fpEstado.dibujando);
-            const canvas = document.getElementById('fpCanvas');
-            if (canvas) canvas.classList.toggle('fp-erasing', false);
-            renderParedes();
-        }
-
-        function toggleBorrarPared() {
-            fpEstado.borrando = !fpEstado.borrando;
-            if (fpEstado.borrando) {
-                fpEstado.dibujando = false;
-                fpEstado.inicioPared = null;
-                fpEstado.previo = null;
-                const btn = document.getElementById('fpWallBtn');
-                if (btn) btn.classList.remove('fp-draw-active');
-            }
-            document.getElementById('fpEraseBtn').classList.toggle('fp-eraser-active', fpEstado.borrando);
-            const canvas = document.getElementById('fpCanvas');
-            if (canvas) canvas.classList.toggle('fp-erasing', fpEstado.borrando);
-            renderParedes();
-        }
-
-        function posicionEnPlano(e) {
-            const rect = document.getElementById('fpCanvas').getBoundingClientRect();
-            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-        }
-
-        function distanciaPuntoSegmento(px, py, x1, y1, x2, y2) {
-            const dx = x2 - x1, dy = y2 - y1;
-            const lenSq = dx * dx + dy * dy;
-            if (lenSq === 0) return Math.hypot(px - x1, py - y1);
-            let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
-            t = Math.max(0, Math.min(1, t));
-            const cx = x1 + t * dx, cy = y1 + t * dy;
-            return Math.hypot(px - cx, py - cy);
-        }
-
-        function indiceMuroEn(p) {
-            const umbral = 12;
-            let mejor = -1, menor = Infinity;
-            fpEstado.walls.forEach((w, i) => {
-                const d = distanciaPuntoSegmento(p.x, p.y, w.x1, w.y1, w.x2, w.y2);
-                if (d < umbral && d < menor) { menor = d; mejor = i; }
-            });
-            return mejor;
-        }
-
-        function manejadorClickCanvas(e) {
-            const p = posicionEnPlano(e);
-            if (fpEstado.borrando) {
-                const idx = indiceMuroEn(p);
-                if (idx !== -1) {
-                    fpEstado.walls.splice(idx, 1);
-                    renderParedes();
-                }
-                return;
-            }
-            if (!fpEstado.dibujando) return;
-            if (!fpEstado.inicioPared) {
-                fpEstado.inicioPared = p;
-                fpEstado.previo = null;
-                renderParedes();
-                return;
-            }
-            const tol = 5;
-            if (Math.abs(p.x - fpEstado.inicioPared.x) < tol && Math.abs(p.y - fpEstado.inicioPared.y) < tol) return;
-            fpEstado.walls.push({
-                x1: fpEstado.inicioPared.x, y1: fpEstado.inicioPared.y,
-                x2: p.x, y2: p.y,
-                thick: parseInt(document.getElementById('fpWallThickness').value, 10) || 6
-            });
-            fpEstado.inicioPared = null;
-            fpEstado.previo = null;
-            renderParedes();
-        }
-
-        function manejadorMoveCanvas(e) {
-            const p = posicionEnPlano(e);
-            if (fpEstado.borrando) {
-                const svg = document.getElementById('fpWalls');
-                svg.querySelectorAll('.fp-wall').forEach((ln, i) => {
-                    ln.classList.remove('fp-wall-hover');
-                    if (i === indiceMuroEn(p)) ln.classList.add('fp-wall-hover');
-                });
-                return;
-            }
-            if (!fpEstado.dibujando || !fpEstado.inicioPared) return;
-            fpEstado.previo = { x1: fpEstado.inicioPared.x, y1: fpEstado.inicioPared.y, x2: p.x, y2: p.y };
-            renderParedes();
+            if (ph) ph.style.display = (fpEstado.shapes.length === 0 && fpEstado.computadoras.length === 0) ? 'block' : 'none';
         }
 
         function manejadorDrop(e) {
@@ -1810,25 +2210,10 @@
             renderComputadoras();
         }
 
-        function deshacerPared() {
-            fpEstado.walls.pop();
-            fpEstado.inicioPared = null;
-            fpEstado.previo = null;
-            renderPlano();
-        }
-
-        function limpiarPlano() {
-            if (!window.confirm('¿Limpiar todo el plano? Se quitan todas las paredes y computadoras.')) return;
-            fpEstado.walls = [];
-            fpEstado.computadoras = [];
-            resetearModoPared();
-            renderPlano();
-        }
-
         function aplicarPlanAlEstado(plan) {
             if (!plan) {
                 fpEstado.name = 'Plano nuevo';
-                fpEstado.walls = [];
+                fpEstado.shapes = [];
                 fpEstado.computadoras = [];
                 return;
             }
@@ -1836,11 +2221,19 @@
             if (plan.data) {
                 try {
                     const d = JSON.parse(plan.data);
-                    fpEstado.walls = d.walls || [];
                     fpEstado.computadoras = d.computadoras || [];
-                } catch (err) { fpEstado.walls = []; fpEstado.computadoras = []; }
+                    if (Array.isArray(d.shapes)) {
+                        fpEstado.shapes = d.shapes;
+                        fpCounter = fpEstado.shapes.reduce((m, s) => Math.max(m, parseInt(String(s.id).replace(/\D/g, ''), 10) || 0), 0);
+                    } else if (Array.isArray(d.walls)) {
+                        fpEstado.shapes = d.walls.map((w, i) => ({ id: 's' + (i + 1), type: 'line', x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, layer: 'muros', color: '#334155', lineType: 'solid', lweight: w.thick || 6 }));
+                        fpCounter = fpEstado.shapes.length;
+                    } else {
+                        fpEstado.shapes = [];
+                    }
+                } catch (err) { fpEstado.shapes = []; fpEstado.computadoras = []; }
             } else {
-                fpEstado.walls = [];
+                fpEstado.shapes = [];
                 fpEstado.computadoras = [];
             }
         }
@@ -1880,12 +2273,10 @@
             const id = parseInt(sel.value, 10) || null;
             const plan = fpPlans.find(p => p.id === id) || null;
             fpPlanoId = id;
-            if (plan) {
-                aplicarPlanAlEstado(plan);
-            } else {
-                aplicarPlanAlEstado(null);
-            }
-            resetearModoPared();
+            if (plan) aplicarPlanAlEstado(plan); else aplicarPlanAlEstado(null);
+            fpEstado.selId = null;
+            cancelarBorrador();
+            quitarEditorTexto();
             document.getElementById('fpName').value = fpEstado.name;
             renderPlano();
         }
@@ -1897,14 +2288,15 @@
                     name: nombre,
                     grid_width: 0,
                     grid_height: 0,
-                    data: JSON.stringify({ walls: [], computadoras: [] })
+                    data: JSON.stringify({ shapes: [], computadoras: [] })
                 });
                 fpPlans.push(created);
                 llenarSelectPlanos();
                 fpPlanoId = created.id;
                 document.getElementById('fpPlanSelect').value = created.id;
                 aplicarPlanAlEstado(created);
-                resetearModoPared();
+                fpEstado.selId = null;
+                cancelarBorrador();
                 document.getElementById('fpName').value = created.name;
                 renderPlano();
                 showNotification('Nuevo plano creado.');
@@ -1931,7 +2323,8 @@
                     fpPlanoId = null;
                     aplicarPlanAlEstado(null);
                 }
-                resetearModoPared();
+                fpEstado.selId = null;
+                cancelarBorrador();
                 document.getElementById('fpName').value = fpEstado.name;
                 renderPlano();
                 showNotification('Plano eliminado.');
@@ -1945,7 +2338,7 @@
                 name: document.getElementById('fpName').value || 'Plano del edificio',
                 grid_width: 0,
                 grid_height: 0,
-                data: JSON.stringify({ walls: fpEstado.walls, computadoras: fpEstado.computadoras })
+                data: JSON.stringify({ shapes: fpEstado.shapes, computadoras: fpEstado.computadoras })
             };
             try {
                 if (fpPlanoId) {
