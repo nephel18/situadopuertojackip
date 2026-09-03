@@ -1050,15 +1050,18 @@
         .legend-swatch.rack { background: #f59e0b; }
 
         /* ===== Editor de Plano del Edificio (estructura arquitectónica) ===== */
+        .fp-plan-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px; padding:10px 12px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:10px; }
+        .fp-label { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:#0f172a; }
+        .fp-label select { padding:7px; border:1px solid #dbe4ef; border-radius:8px; min-width:200px; font-size:13px; }
         .floor-plan-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
         .fp-name-input { flex:1 1 180px; padding:8px 10px; border:1px solid #dbe4ef; border-radius:8px; font-size:13px; }
         .fp-dim { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#334155; }
         .fp-dim select { padding:7px; border:1px solid #dbe4ef; border-radius:8px; }
         .fp-btn { padding:8px 14px; }
         .btn-warning { background:#f59e0b; color:#fff; border:none; border-radius:8px; cursor:pointer; }
-        .floor-plan-body { display:flex; gap:16px; }
-        .floor-plan-canvas-wrap { flex:1; min-width:0; }
-        .fp-canvas { position:relative; height:560px; background:#f8fbff; border:1px solid #dfeaf4; border-radius:14px; overflow:hidden; user-select:none; background-image:linear-gradient(#eef4fb 1px, transparent 1px),linear-gradient(90deg,#eef4fb 1px,transparent 1px); background-size:20px 20px; }
+        .floor-plan-body { display:flex; gap:16px; flex:1; min-height:0; }
+        .floor-plan-canvas-wrap { flex:1; min-width:0; display:flex; flex-direction:column; }
+        .fp-canvas { position:relative; flex:1; min-height:0; background:#f8fbff; border:1px solid #dfeaf4; border-radius:14px; overflow:hidden; user-select:none; background-image:linear-gradient(#eef4fb 1px, transparent 1px),linear-gradient(90deg,#eef4fb 1px,transparent 1px); background-size:20px 20px; }
         .fp-walls { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
         .fp-wall { stroke:#334155; fill:none; stroke-linecap:round; }
         .fp-wall-preview { stroke:#3b82f6; stroke-dasharray:6 4; fill:none; stroke-linecap:round; }
@@ -1067,7 +1070,7 @@
         .fp-comp-on-floor .fi-ip { font-size:12px; }
         .fp-comp-on-floor .fi-serial { font-size:9px; opacity:.85; }
         .fp-comp-on-floor:hover { box-shadow:0 0 0 2px rgba(59,130,246,.5); }
-        .floor-plan-side { width:320px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto; }
+        .floor-plan-side { width:320px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; max-height:100%; overflow-y:auto; }
         .floor-plan-side h4 { margin:0 0 6px; font-size:13px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:6px; }
         .fp-tools-guide { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
         .fp-guide-list { margin:0; padding-left:16px; font-size:12px; color:#475569; }
@@ -1476,10 +1479,19 @@
     </div>
 
     <div id="modalFloorPlan" class="modal">
-        <div class="modal-content building-modal-content" style="max-width:1180px;">
+        <div class="modal-content building-modal-content" style="max-width:1400px; width:min(1400px, 96vw); height:min(94vh, 900px); display:flex; flex-direction:column;">
             <div class="modal-header">
                 <h3>🏢 Plano del Edificio</h3>
                 <button type="button" class="close-modal-btn" onclick="cerrarModalFloorPlan()">✕</button>
+            </div>
+
+            <div class="fp-plan-row">
+                <label class="fp-label">Plano:
+                    <select id="fpPlanSelect" onchange="cambiarPlanoSeleccionado()"></select>
+                </label>
+                <button type="button" class="btn-secondary fp-btn" onclick="crearNuevoPlano()">➕ Nuevo plano</button>
+                <button type="button" class="btn-danger fp-btn" onclick="eliminarPlanoActual()">🗑 Eliminar</button>
+                <span id="fpPlanHint" class="fp-hint"></span>
             </div>
 
             <div class="floor-plan-toolbar">
@@ -1581,6 +1593,7 @@
             previo: null
         };
         let fpPlanoId = null;
+        let fpPlans = [];
         let fpCompsList = [];
         let fpDragCompId = null;
 
@@ -1593,7 +1606,7 @@
             document.getElementById('fpName').value = fpEstado.name;
             registrarEventosPlanos();
             cargarComputadorasPlano();
-            cargarPlanoExistente().then(() => renderPlano());
+            cargarTodosLosPlanos().then(() => renderPlano());
             cerrarMenusDesplegables();
             document.getElementById('modalFloorPlan').style.display = 'flex';
         }
@@ -1734,6 +1747,121 @@
             renderPlano();
         }
 
+        function aplicarPlanAlEstado(plan) {
+            if (!plan) {
+                fpEstado.name = 'Plano nuevo';
+                fpEstado.walls = [];
+                fpEstado.computadoras = [];
+                return;
+            }
+            fpEstado.name = plan.name || 'Plano del edificio';
+            if (plan.data) {
+                try {
+                    const d = JSON.parse(plan.data);
+                    fpEstado.walls = d.walls || [];
+                    fpEstado.computadoras = d.computadoras || [];
+                } catch (err) { fpEstado.walls = []; fpEstado.computadoras = []; }
+            } else {
+                fpEstado.walls = [];
+                fpEstado.computadoras = [];
+            }
+        }
+
+        function llenarSelectPlanos() {
+            const sel = document.getElementById('fpPlanSelect');
+            sel.innerHTML = '';
+            fpPlans.forEach(p => {
+                sel.add(new Option(p.name || ('Plano ' + p.id), p.id));
+            });
+        }
+
+        async function cargarTodosLosPlanos() {
+            try {
+                const plans = await apiRequest('/api/floor-plans', 'GET');
+                fpPlans = Array.isArray(plans) ? plans : [];
+                llenarSelectPlanos();
+                if (fpPlans.length > 0) {
+                    fpPlanoId = fpPlans[0].id;
+                    aplicarPlanAlEstado(fpPlans[0]);
+                    document.getElementById('fpPlanSelect').value = fpPlanoId;
+                } else {
+                    fpPlanoId = null;
+                    aplicarPlanAlEstado(null);
+                }
+                document.getElementById('fpName').value = fpEstado.name;
+                return true;
+            } catch (error) {
+                console.error('No se pudieron cargar los planos:', error);
+                document.getElementById('fpPlanHint').textContent = 'No se pudieron cargar los planos.';
+                return false;
+            }
+        }
+
+        function cambiarPlanoSeleccionado() {
+            const sel = document.getElementById('fpPlanSelect');
+            const id = parseInt(sel.value, 10) || null;
+            const plan = fpPlans.find(p => p.id === id) || null;
+            fpPlanoId = id;
+            if (plan) {
+                aplicarPlanAlEstado(plan);
+            } else {
+                aplicarPlanAlEstado(null);
+            }
+            resetearModoPared();
+            document.getElementById('fpName').value = fpEstado.name;
+            renderPlano();
+        }
+
+        async function crearNuevoPlano() {
+            const nombre = (document.getElementById('fpName').value || '').trim() || ('Plano ' + (fpPlans.length + 1));
+            try {
+                const created = await apiRequest('/api/floor-plans', 'POST', {
+                    name: nombre,
+                    grid_width: 0,
+                    grid_height: 0,
+                    data: JSON.stringify({ walls: [], computadoras: [] })
+                });
+                fpPlans.push(created);
+                llenarSelectPlanos();
+                fpPlanoId = created.id;
+                document.getElementById('fpPlanSelect').value = created.id;
+                aplicarPlanAlEstado(created);
+                resetearModoPared();
+                document.getElementById('fpName').value = created.name;
+                renderPlano();
+                showNotification('Nuevo plano creado.');
+            } catch (error) {
+                showNotification(error.message || 'No se pudo crear el plano.');
+            }
+        }
+
+        async function eliminarPlanoActual() {
+            if (!fpPlanoId) {
+                showNotification('No hay plano que eliminar.');
+                return;
+            }
+            if (!window.confirm('¿Eliminar este plano permanentemente?')) return;
+            try {
+                await apiRequest(`/api/floor-plans/${fpPlanoId}`, 'DELETE');
+                fpPlans = fpPlans.filter(p => p.id !== fpPlanoId);
+                llenarSelectPlanos();
+                if (fpPlans.length > 0) {
+                    fpPlanoId = fpPlans[0].id;
+                    aplicarPlanAlEstado(fpPlans[0]);
+                    document.getElementById('fpPlanSelect').value = fpPlanoId;
+                } else {
+                    fpPlanoId = null;
+                    aplicarPlanAlEstado(null);
+                }
+                resetearModoPared();
+                document.getElementById('fpName').value = fpEstado.name;
+                renderPlano();
+                showNotification('Plano eliminado.');
+            } catch (error) {
+                showNotification(error.message || 'No se pudo eliminar el plano.');
+            }
+        }
+
         async function guardarPlano() {
             const payload = {
                 name: document.getElementById('fpName').value || 'Plano del edificio',
@@ -1743,36 +1871,20 @@
             };
             try {
                 if (fpPlanoId) {
-                    await apiRequest(`/api/floor-plans/${fpPlanoId}`, 'PUT', payload);
+                    const updated = await apiRequest(`/api/floor-plans/${fpPlanoId}`, 'PUT', payload);
+                    const idx = fpPlans.findIndex(p => p.id === fpPlanoId);
+                    if (idx !== -1) fpPlans[idx] = updated;
                 } else {
                     const created = await apiRequest('/api/floor-plans', 'POST', payload);
                     fpPlanoId = created.id;
+                    fpPlans.push(created);
                 }
                 fpEstado.name = payload.name;
+                llenarSelectPlanos();
+                if (fpPlanoId) document.getElementById('fpPlanSelect').value = fpPlanoId;
                 showNotification('Plano guardado correctamente.');
             } catch (error) {
                 showNotification(error.message || 'No se pudo guardar el plano.');
-            }
-        }
-
-        async function cargarPlanoExistente() {
-            try {
-                const plans = await apiRequest('/api/floor-plans', 'GET');
-                if (plans && plans.length > 0) {
-                    const p = plans[0];
-                    fpPlanoId = p.id;
-                    fpEstado.name = p.name || 'Plano del edificio';
-                    document.getElementById('fpName').value = fpEstado.name;
-                    if (p.data) {
-                        try {
-                            const d = JSON.parse(p.data);
-                            fpEstado.walls = d.walls || [];
-                            fpEstado.computadoras = d.computadoras || [];
-                        } catch (err) { fpEstado.walls = []; fpEstado.computadoras = []; }
-                    }
-                }
-            } catch (error) {
-                console.error('No se pudo cargar el plano:', error);
             }
         }
 
