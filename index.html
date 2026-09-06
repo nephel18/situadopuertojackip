@@ -2423,17 +2423,18 @@ function normalizeUser(user) {
 
         function normalizeRecord(item) {
             if (!item) return null;
+            const limpio = (v) => (v === '-' || v == null ? '' : v);
             const normalized = {
                 id: item.id || null,
-                serial: item.serial ?? item.serial_number ?? '-',
-                usuario: item.usuario ?? item.owner_identifier ?? item.model_name ?? '-',
-                marca: item.marca ?? item.brand ?? '-',
+                serial: limpio(item.serial ?? item.serial_number ?? ''),
+                usuario: limpio(item.usuario ?? item.owner_identifier ?? item.model_name ?? ''),
+                marca: limpio(item.marca ?? item.brand ?? ''),
                 tipo: item.tipo ?? item.device_type ?? 'PC',
-                depto: item.depto ?? (item.department || '-'),
-                ip: item.ip ?? item.ip_address ?? '-',
+                depto: limpio(item.depto ?? item.department ?? ''),
+                ip: limpio(item.ip ?? item.ip_address ?? ''),
                 operativo: item.operativo ?? (item.is_operational === true ? 'Sí' : 'No'),
-                puerto: item.puerto ?? item.ethernet_port ?? '-',
-                nota: item.nota ?? item.notes ?? '-'
+                puerto: limpio(item.puerto ?? item.ethernet_port ?? ''),
+                nota: limpio(item.nota ?? item.notes ?? '')
             };
 
             if (String(normalized.tipo).trim().toUpperCase() === 'IMPRESORA' || item.model_name) {
@@ -2944,15 +2945,15 @@ function normalizeUser(user) {
             const recordId = parseInt(document.getElementById('regIndex').value, 10);
             
             const data = {
-                serial: document.getElementById('regSerial').value.trim().toUpperCase() || '-',
-                usuario: document.getElementById('regUsuario').value.trim() || '-',
-                marca: document.getElementById('regMarca').value.trim().toUpperCase() || '-',
+                serial: document.getElementById('regSerial').value.trim().toUpperCase(),
+                usuario: document.getElementById('regUsuario').value.trim(),
+                marca: document.getElementById('regMarca').value.trim().toUpperCase(),
                 tipo: document.getElementById('regTipo').value.toUpperCase(),
-                depto: document.getElementById('regDepto').value.trim().toUpperCase() || '-',
-                ip: document.getElementById('regIp').value.trim().toUpperCase() || '-',
+                depto: document.getElementById('regDepto').value.trim().toUpperCase(),
+                ip: document.getElementById('regIp').value.trim().toUpperCase(),
                 operativo: document.getElementById('regOperativo').value,
-                puerto: document.getElementById('regPuerto').value.trim().toUpperCase() || '-',
-                nota: document.getElementById('regNota').value.trim().toUpperCase() || '-'
+                puerto: document.getElementById('regPuerto').value.trim().toUpperCase(),
+                nota: document.getElementById('regNota').value.trim().toUpperCase()
             };
 
             try {
@@ -2989,15 +2990,15 @@ function normalizeUser(user) {
             const recordId = parseInt(document.getElementById('impIndex').value, 10);
 
             const data = {
-                serial: document.getElementById('impSerial').value.trim().toUpperCase() || '-',
+                serial: document.getElementById('impSerial').value.trim().toUpperCase(),
                 usuario: '',
-                marca: document.getElementById('impMarca').value.trim().toUpperCase() || '-',
+                marca: document.getElementById('impMarca').value.trim().toUpperCase(),
                 tipo: document.getElementById('impTipo').value.toUpperCase(),
-                depto: document.getElementById('impDepto').value.trim().toUpperCase() || '-',
-                ip: document.getElementById('impIp').value.trim().toUpperCase() || '-',
+                depto: document.getElementById('impDepto').value.trim().toUpperCase(),
+                ip: document.getElementById('impIp').value.trim().toUpperCase(),
                 operativo: document.getElementById('impOperativa').value,
-                puerto: document.getElementById('impPuerto').value.trim().toUpperCase() || '-',
-                nota: document.getElementById('impNota').value.trim().toUpperCase() || '-'
+                puerto: document.getElementById('impPuerto').value.trim().toUpperCase(),
+                nota: document.getElementById('impNota').value.trim().toUpperCase()
             };
 
             try {
@@ -3318,15 +3319,15 @@ function normalizeUser(user) {
             registros.forEach((r, index) => {
                 const row = worksheet.addRow([
                     index + 1,
-                    r.serial || '-',
-                    r.usuario || '-',
-                    r.marca || '-',
+                    r.serial || '',
+                    r.usuario || '',
+                    r.marca || '',
                     r.tipo || 'PC',
-                    r.depto || '-',
-                    r.ip || '-',
+                    r.depto || '',
+                    r.ip || '',
                     r.operativo || 'NO',
-                    r.puerto || '-',
-                    r.nota || '-'
+                    r.puerto || '',
+                    r.nota || ''
                 ]);
 
                 row.height = 20;
