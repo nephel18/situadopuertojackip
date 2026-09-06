@@ -881,6 +881,22 @@
             margin-bottom: 15px;
         }
 
+        /* Modal de eliminación múltiple */
+        .del-modal-content { max-width: 620px; }
+        .del-selbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:13px; font-weight:600; color:#334155; }
+        .del-seltodo { display:flex; align-items:center; gap:6px; cursor:pointer; }
+        .del-seltodo input { width:16px; height:16px; accent-color:#d32f2f; cursor:pointer; }
+        .del-count { color:#d32f2f; }
+        .del-list { max-height:45vh; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:6px; margin-bottom:10px; }
+        .del-item { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; }
+        .del-item:hover { background:#f1f5f9; }
+        .del-item.del-checked { background:#fee2e2; }
+        .del-item input { width:16px; height:16px; accent-color:#d32f2f; cursor:pointer; flex-shrink:0; }
+        .del-item .del-info { display:flex; flex-direction:column; line-height:1.25; flex:1; min-width:0; }
+        .del-item .del-main { font-weight:700; font-size:13px; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .del-item .del-sub { font-size:11px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .del-hint { font-size:12px; color:#64748b; margin-bottom:12px; }
+
         .modal-grid {
             display: flex;
             flex-direction: column;
@@ -1504,12 +1520,21 @@
     </div>
 
     <div id="modalConfirmDelete" class="modal">
-        <div class="modal-content">
-            <h3 style="color: #d32f2f;">Confirmar eliminación</h3>
-            <p style="font-size: 14px; margin-bottom: 20px; color: #555;">¿Está seguro de que desea eliminar este registro?</p>
+        <div class="modal-content del-modal-content">
+            <div class="modal-header">
+                <h3 style="color:#d32f2f;">🗑 Eliminar registros</h3>
+                <button type="button" class="close-modal-btn" onclick="cerrarModalDelete()">✕</button>
+            </div>
+            <p style="font-size:14px; margin-bottom:12px; color:#555;">Selecciona los registros que deseas eliminar.</p>
+            <div class="del-selbar">
+                <label class="del-seltodo"><input type="checkbox" id="delTodo" onchange="toggleSeleccionTodo(this.checked)"> Seleccionar todos</label>
+                <span class="del-count" id="delCount">0 seleccionados</span>
+            </div>
+            <div class="del-list" id="delList"></div>
+            <div class="del-hint" id="delHint"></div>
             <div class="actions-row">
                 <button type="button" class="btn-secondary" onclick="cerrarModalDelete()">Cancelar</button>
-                <button type="button" class="btn-danger" onclick="confirmarEliminacion()">Eliminar</button>
+                <button type="button" class="btn-danger" id="btnConfirmDel" onclick="confirmarEliminacion()">Eliminar seleccionados</button>
             </div>
         </div>
     </div>
@@ -1627,6 +1652,7 @@
         let registros = [];
         let usuarioActual = null;
         let indexEliminar = null;
+        let indexSeleccion = new Set();
 
         async function apiRequest(path, method = 'GET', body = null) {
             const options = {
@@ -3107,34 +3133,111 @@ function normalizeUser(user) {
 
         function eliminarRegistro(index) {
             indexEliminar = index;
+            indexSeleccion.clear();
+            indexSeleccion.add(index);
+            renderListaEliminar();
             document.getElementById('modalConfirmDelete').style.display = 'flex';
         }
 
         function cerrarModalDelete() {
             indexEliminar = null;
+            indexSeleccion.clear();
             document.getElementById('modalConfirmDelete').style.display = 'none';
         }
 
-        async function confirmarEliminacion() {
-            if (indexEliminar !== null) {
-                const item = registros[indexEliminar];
-                if (!item || !item.id) {
-                    registros.splice(indexEliminar, 1);
-                    actualizarTabla();
-                    cerrarModalDelete();
-                    showNotification('Registro eliminado.');
-                    return;
-                }
+        function renderListaEliminar() {
+            const lista = document.getElementById('delList');
+            lista.innerHTML = '';
+            if (registros.length === 0) {
+                document.getElementById('delHint').textContent = 'No hay registros para eliminar.';
+                actualizarContadorDel();
+                return;
+            }
+            document.getElementById('delHint').textContent = '';
+            registros.forEach((item, index) => {
+                const fila = document.createElement('label');
+                fila.className = 'del-item';
+                const check = document.createElement('input');
+                check.type = 'checkbox';
+                check.checked = indexSeleccion.has(index);
+                check.onchange = () => {
+                    if (check.checked) indexSeleccion.add(index); else indexSeleccion.delete(index);
+                    fila.classList.toggle('del-checked', check.checked);
+                    actualizarContadorDel();
+                };
+                const info = document.createElement('span');
+                info.className = 'del-info';
+                const main = document.createElement('span');
+                main.className = 'del-main';
+                main.textContent = `${item.serial || 'Sin serial'} · ${item.tipo || 'PC'}`;
+                const sub = document.createElement('span');
+                sub.className = 'del-sub';
+                sub.textContent = `${item.usuario || '-'} · ${item.depto || '-'} · ${item.ip || '-'}`;
+                info.append(main, sub);
+                fila.append(check, info);
+                if (check.checked) fila.classList.add('del-checked');
+                lista.appendChild(fila);
+            });
+            actualizarContadorDel();
+        }
 
+        function toggleSeleccionTodo(estado) {
+            indexSeleccion.clear();
+            if (estado) registros.forEach((_, index) => indexSeleccion.add(index));
+            renderListaEliminar();
+        }
+
+        function actualizarContadorDel() {
+            const n = indexSeleccion.size;
+            document.getElementById('delCount').textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
+            document.getElementById('btnConfirmDel').disabled = n === 0;
+            const todo = document.getElementById('delTodo');
+            if (todo) {
+                todo.checked = n > 0 && n === registros.length;
+                todo.indeterminate = n > 0 && n < registros.length;
+            }
+        }
+
+        async function confirmarEliminacion() {
+            if (indexSeleccion.size === 0) return;
+            if (!window.confirm(`¿Seguro que deseas eliminar ${indexSeleccion.size} ${indexSeleccion.size === 1 ? 'registro' : 'registros'}? Esta acción no se puede deshacer.`)) return;
+
+            const indices = [...indexSeleccion].sort((a, b) => b - a);
+            let eliminados = 0;
+            let errores = 0;
+            const ids = new Set();
+
+            for (const i of indices) {
+                const item = registros[i];
+                if (!item) continue;
+                if (!item.id) continue;
                 try {
                     await apiRequest(`/api/registros/${item.id}`, 'DELETE');
-                    registros.splice(indexEliminar, 1);
-                    actualizarTabla();
-                    cerrarModalDelete();
-                    showNotification('Registro eliminado.');
+                    ids.add(item.id);
+                    eliminados += 1;
                 } catch (error) {
-                    showNotification(error.message || 'No se pudo eliminar el registro.');
+                    errores += 1;
                 }
+            }
+
+            indices.forEach(i => {
+                const item = registros[i];
+                if (item && !item.id) {
+                    registros.splice(i, 1);
+                    eliminados += 1;
+                }
+            });
+            if (ids.size > 0) registros = registros.filter(r => !(r.id && ids.has(r.id)));
+
+            actualizarTabla();
+            cerrarModalDelete();
+
+            if (errores > 0 && eliminados > 0) {
+                showNotification(`Se eliminaron ${eliminados} registro(s); ${errores} no se pudieron eliminar.`);
+            } else if (errores > 0) {
+                showNotification('No se pudieron eliminar los registros.');
+            } else {
+                showNotification(`Se eliminaron ${eliminados} registro(s).`);
             }
         }
 
