@@ -1313,6 +1313,67 @@
                 width: 100%;
                 right: 0;
             }
+
+            /* TABLA DE REGISTROS → TARJETAS EN MÓVIL */
+            .table-container {
+                overflow-x: hidden;
+                border-radius: 14px;
+            }
+            #recordsTable {
+                display: block;
+                min-width: 0;
+            }
+            #recordsTable thead {
+                display: none;
+            }
+            #recordsTable tbody {
+                display: block;
+            }
+            #recordsTable tbody tr {
+                display: block;
+                width: 100%;
+                background: #ffffff;
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 10px 14px;
+                margin-bottom: 12px;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            }
+            #recordsTable tbody tr:hover {
+                background: #ffffff;
+            }
+            #recordsTable td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                text-align: right;
+                border: none;
+                border-bottom: 1px dashed #e6eef7;
+                padding: 8px 0;
+                white-space: normal;
+            }
+            #recordsTable td[data-l]::before {
+                content: attr(data-l);
+                font-size: 10px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                color: #64748b;
+                flex-shrink: 0;
+            }
+            #recordsTable td.td-mono {
+                white-space: nowrap;
+            }
+            #recordsTable td .port-cell {
+                justify-content: flex-end;
+            }
+            #recordsTable td.col-acc {
+                display: flex;
+                justify-content: center;
+                border-bottom: none;
+                padding-top: 10px;
+            }
         }
     </style>
 </head>
@@ -3206,16 +3267,16 @@ function normalizeUser(user) {
                 const statusClass = esSi ? 'si' : 'no';
 
                 tr.innerHTML = `
-                    <td class="td-mono"><strong>${index + 1}</strong></td>
-                    <td class="td-mono">${item.serial}</td>
-                    <td>${item.usuario}</td>
-                    <td>${item.marca}</td>
-                    <td>${item.tipo}</td>
-                    <td>${item.depto}</td>
-                    <td class="td-mono">${item.ip}</td>
-                    <td><span class="status ${statusClass}"><span class="led"></span>${item.operativo}</span></td>
-                    <td><div class="port-cell">${portSVG(item.operativo)}<span class="mono">${item.puerto}</span></div></td>
-                    <td>${item.nota}</td>
+                    <td class="td-mono" data-l="N°"><strong>${index + 1}</strong></td>
+                    <td class="td-mono" data-l="Serial">${item.serial}</td>
+                    <td data-l="Usuario">${item.usuario}</td>
+                    <td data-l="Marca">${item.marca}</td>
+                    <td data-l="Tipo">${item.tipo}</td>
+                    <td data-l="Depto">${item.depto}</td>
+                    <td class="td-mono" data-l="IP">${item.ip}</td>
+                    <td data-l="Operativo"><span class="status ${statusClass}"><span class="led"></span>${item.operativo}</span></td>
+                    <td data-l="Puerto"><div class="port-cell">${portSVG(item.operativo)}<span class="mono">${item.puerto}</span></div></td>
+                    <td data-l="Nota">${item.nota}</td>
                     <td class="col-acc" style="display: ${esAdmin ? '' : 'none'};">
                         <div class="row-actions">
                             <button class="icon-btn edit-btn" onclick="editarRegistro(${index})" title="Editar">✎</button>
