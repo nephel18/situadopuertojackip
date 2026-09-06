@@ -3184,6 +3184,11 @@ function normalizeUser(user) {
                 `;
                 tbody.appendChild(tr);
             });
+
+            const searchBox = document.getElementById('searchInput');
+            if (searchBox && searchBox.value.trim() !== '') {
+                filtrarTabla();
+            }
         }
 
         function editarRegistro(index) {
