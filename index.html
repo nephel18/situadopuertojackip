@@ -2436,7 +2436,7 @@ function normalizeUser(user) {
                 nota: item.nota ?? item.notes ?? '-'
             };
 
-            if (normalized.tipo === 'Impresora' || item.model_name) {
+            if (String(normalized.tipo).trim().toUpperCase() === 'IMPRESORA' || item.model_name) {
                 normalized.tipo = 'Impresora';
                 normalized.usuario = '';
             }
@@ -3098,7 +3098,7 @@ function normalizeUser(user) {
             const item = registros[index];
             if (!item) return;
 
-            if (item.tipo === 'Impresora') {
+            if (String(item.tipo).trim().toUpperCase() === 'IMPRESORA') {
                 document.getElementById('impIndex').value = item.id ?? index;
                 document.getElementById('impSerial').value = item.serial !== '-' ? item.serial : '';
                 document.getElementById('impMarca').value = item.marca !== '-' ? item.marca : '';
