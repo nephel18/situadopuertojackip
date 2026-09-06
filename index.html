@@ -780,26 +780,31 @@
             border-collapse: collapse;
             text-align: left;
             font-size: 13px;
-            min-width: 800px;
+            min-width: 640px;
         }
 
         th {
             background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: #ffffff;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid rgba(255,255,255,0.15);
             font-size: 11px;
             text-transform: uppercase;
             text-align: center;
-            white-space: nowrap;
+            line-height: 1.35;
         }
 
         td {
-            padding: 10px 12px;
+            padding: 10px;
             border-bottom: 1px solid #edf3fa;
             text-align: center;
-            white-space: nowrap;
             color: var(--text);
+        }
+
+        td.td-mono {
+            white-space: nowrap;
+            font-family: Consolas, "Cascadia Mono", monospace;
+            font-size: 12px;
         }
 
         tr:hover {
@@ -3160,13 +3165,13 @@ function normalizeUser(user) {
                 const statusClass = esSi ? 'si' : 'no';
 
                 tr.innerHTML = `
-                    <td><strong>${index + 1}</strong></td>
-                    <td>${item.serial}</td>
+                    <td class="td-mono"><strong>${index + 1}</strong></td>
+                    <td class="td-mono">${item.serial}</td>
                     <td>${item.usuario}</td>
                     <td>${item.marca}</td>
                     <td>${item.tipo}</td>
                     <td>${item.depto}</td>
-                    <td>${item.ip}</td>
+                    <td class="td-mono">${item.ip}</td>
                     <td><span class="status ${statusClass}"><span class="led"></span>${item.operativo}</span></td>
                     <td><div class="port-cell">${portSVG(item.operativo)}<span class="mono">${item.puerto}</span></div></td>
                     <td>${item.nota}</td>
